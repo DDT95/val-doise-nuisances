@@ -1,11 +1,9 @@
 const $ = (id) => document.getElementById(id),
   map = L.map("map", { zoomControl: false }).setView([49.08, 2.1], 10);
 L.control.zoom({ position: "bottomright" }).addTo(map);
-L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-  subdomains: "abcd",
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
-  opacity: 0.62,
-  attribution: "© OpenStreetMap · © CARTO",
+  attribution: "© contributeurs OpenStreetMap",
 }).addTo(map);
 map.createPane("noise");
 map.getPane("noise").style.zIndex = 410;
@@ -97,7 +95,7 @@ function addTerritoryMask(buffer) {
   state.layers.territoryMask = L.polygon([world, ...holes], {
     pane: "territoryMask",
     stroke: false,
-    fillColor: "#343a40",
+    fillColor: "#eef1f4",
     fillOpacity: 1,
     fillRule: "evenodd",
     interactive: false,
@@ -196,7 +194,7 @@ Promise.all(
         .on("click", () => showRail(f.properties)),
   });
   state.layers.communes = L.geoJSON(communes, {
-    style: { color: "#d4d9de", weight: 0.7, opacity: 0.62, fillOpacity: 0.01 },
+    style: { color: "#263b57", weight: 0.7, opacity: 0.62, fillOpacity: 0.01 },
     onEachFeature: (f, l) => {
       const code = String(
         f.properties.code || f.properties.insee || f.properties.INSEE_COM || "",
