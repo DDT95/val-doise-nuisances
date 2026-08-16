@@ -25,14 +25,7 @@ const bounds = [
   state = {
     layers: {},
     stats: {},
-    active: new Set([
-      "roads",
-      "rails",
-      "aircraft",
-      "communes",
-      "traffic",
-      "liveAir",
-    ]),
+    active: new Set(["roadNoise", "roads", "communes"]),
     data: {},
   };
 function openDetail(html) {
@@ -122,7 +115,8 @@ const roadNoise = L.imageOverlay("data/noise-road.png", bounds, {
   });
 state.layers.roadNoise = roadNoise;
 state.layers.railNoise = railNoise;
-const trafficLayer = L.layerGroup().addTo(map);
+roadNoise.addTo(map);
+const trafficLayer = L.layerGroup();
 state.layers.traffic = trafficLayer;
 async function loadTraffic() {
   try {
@@ -202,7 +196,7 @@ Promise.all(
           sticky: true,
         })
         .on("click", () => showRail(f.properties)),
-  }).addTo(map);
+  });
   state.layers.communes = L.geoJSON(communes, {
     style: { color: "#263b57", weight: 0.65, opacity: 0.55, fillOpacity: 0.01 },
     onEachFeature: (f, l) => {
@@ -307,7 +301,7 @@ function setupSearch(geo) {
   $("searchInput").oninput = run;
   $("searchButton").onclick = run;
 }
-const aircraft = L.layerGroup().addTo(map);
+const aircraft = L.layerGroup();
 state.layers.aircraft = aircraft;
 function band(ft) {
   if (!Number.isFinite(ft))

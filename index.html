@@ -38,8 +38,8 @@
       ><button id="openDataTop" class="livebox">
         <span class="fresh-dot"></span>
         <div>
-          <strong>Portrait départemental</strong
-          ><small>Indicateurs & données Val-d’Oise</small>
+          <strong>Données & évolutions</strong
+          ><small>Synthèse départementale</small>
         </div>
       </button>
     </header>
@@ -66,7 +66,7 @@
         <div id="searchResults" class="search-results" hidden></div>
         <div class="quick-actions">
           <button id="resetView">Recentrer</button
-          ><button id="openData">Portrait du 95</button>
+          ><button id="openData">Données & évolutions</button>
         </div>
         <div class="layers-scroll" aria-label="Couches cartographiques">
           <section class="layers-panel">
@@ -84,7 +84,7 @@
             <div class="layer-group">
               <span>BRUIT ROUTIER</span>
               <div class="layer-cards">
-                <button class="layer-card" data-layer="roadNoise">
+                <button class="layer-card active" data-layer="roadNoise">
                   <i class="layer-swatch noise-road"></i
                   ><span
                     ><b>Niveaux sonores routiers</b
@@ -112,7 +112,7 @@
                       >Carte stratégique · Lden · classes dB(A)</small
                     ></span
                   ><i class="layer-switch"></i></button
-                ><button class="layer-card active" data-layer="rails">
+                ><button class="layer-card" data-layer="rails">
                   <i class="layer-swatch rail"></i
                   ><span
                     ><b>Voies ferrées</b
@@ -133,10 +133,11 @@
                 </button>
               </div>
             </div>
+            <div class="live-heading">EN DIRECT</div>
             <div class="layer-group live-group">
               <span>EN DIRECT</span>
               <div class="layer-cards">
-                <button class="layer-card active" data-layer="traffic">
+                <button class="layer-card" data-layer="traffic">
                   <span class="live-pulse"></span
                   ><span
                     ><b>Circulation maintenant</b
@@ -144,7 +145,7 @@
                       >Sytadin · chargement du trafic…</small
                     ></span
                   ><i class="layer-switch"></i></button
-                ><button class="layer-card active" data-layer="aircraft">
+                ><button class="layer-card" data-layer="aircraft">
                   <i class="layer-swatch plane"></i
                   ><span
                     ><b>Avions maintenant</b
@@ -152,7 +153,7 @@
                       >Positions et altitudes ADS-B</small
                     ></span
                   ><i class="layer-switch"></i></button
-                ><button class="layer-card active" data-layer="liveAir">
+                ><button class="layer-card" data-layer="liveAir">
                   <span class="live-pulse air-dot"></span
                   ><span
                     ><b>Qualité de l’air aujourd’hui</b

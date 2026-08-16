@@ -138,7 +138,7 @@
 
 /* Gabarit de référence : transport95 */
 .topbar {
-  border-bottom: 4px solid var(--blue);
+  border-bottom: 0;
 }
 .sidebar {
   background: rgba(255, 255, 255, 0.94);
@@ -281,6 +281,15 @@
 }
 .layer-group > span {
   display: none;
+}
+.live-heading {
+  margin: 8px 0 0;
+  padding: 14px 3px 7px;
+  border-top: 1px solid #edf0f5;
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
 }
 .layer-cards {
   gap: 0;
