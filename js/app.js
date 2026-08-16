@@ -15,6 +15,9 @@ map.createPane("traffic");
 map.getPane("traffic").style.zIndex = 420;
 map.createPane("network");
 map.getPane("network").style.zIndex = 430;
+map.createPane("territoryMask");
+map.getPane("territoryMask").style.zIndex = 440;
+map.getPane("territoryMask").style.pointerEvents = "none";
 const bounds = [
     [48.911488, 1.6035671],
     [49.248488, 2.5965671],
@@ -62,6 +65,62 @@ function noiseColor(v) {
             : v >= 45
               ? "#74c476"
               : "#57abd2";
+}
+function pointInRing(lon, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i],
+      [xj, yj] = ring[j];
+    if (
+      yi > lat !== yj > lat &&
+      lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi
+    )
+      inside = !inside;
+  }
+  return inside;
+}
+function insideTerritory(lon, lat) {
+  const geometry = state.data.buffer?.features?.[0]?.geometry;
+  if (!geometry) return true;
+  const polygons =
+    geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
+  return polygons.some(
+    (polygon) =>
+      pointInRing(lon, lat, polygon[0]) &&
+      !polygon.slice(1).some((hole) => pointInRing(lon, lat, hole)),
+  );
+}
+function addTerritoryMask(buffer) {
+  const geometry = buffer.features[0].geometry;
+  const polygons =
+    geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
+  const world = [
+    [-85, -180],
+    [-85, 180],
+    [85, 180],
+    [85, -180],
+  ];
+  const holes = polygons.map((polygon) =>
+    polygon[0].map(([lon, lat]) => [lat, lon]),
+  );
+  state.layers.territoryMask = L.polygon([world, ...holes], {
+    pane: "territoryMask",
+    stroke: false,
+    fillColor: "#f4f7f8",
+    fillOpacity: 1,
+    fillRule: "evenodd",
+    interactive: false,
+  }).addTo(map);
+  state.layers.bufferOutline = L.geoJSON(buffer, {
+    pane: "territoryMask",
+    style: {
+      color: "#000091",
+      weight: 1.2,
+      opacity: 0.45,
+      fillOpacity: 0,
+      interactive: false,
+    },
+  }).addTo(map);
 }
 const roadNoise = L.imageOverlay("data/noise-road.png", bounds, {
     pane: "noise",
@@ -123,10 +182,13 @@ Promise.all(
     "commune_stats.json",
     "roads.geojson",
     "rails.geojson",
+    "valdoise-buffer-1km.geojson",
   ].map((f) => fetch("data/" + f).then((r) => r.json())),
-).then(([communes, stats, roads, rails]) => {
+).then(([communes, stats, roads, rails, buffer]) => {
   state.stats = stats;
   state.data.communes = communes;
+  state.data.buffer = buffer;
+  addTerritoryMask(buffer);
   state.layers.roads = L.geoJSON(roads, {
     pane: "network",
     style: (f) => ({
@@ -164,6 +226,7 @@ Promise.all(
   map.fitBounds(state.layers.communes.getBounds(), { padding: [16, 16] });
   setupSearch(communes);
   renderLiveAir();
+  loadAircraft();
 });
 function showRoad(p) {
   openDetail(
@@ -281,7 +344,10 @@ async function loadAircraft() {
       }).then((r) => r.json());
     }
     const planes = (d.ac || []).filter(
-      (p) => Number.isFinite(p.lat) && Number.isFinite(p.lon),
+      (p) =>
+        Number.isFinite(p.lat) &&
+        Number.isFinite(p.lon) &&
+        insideTerritory(p.lon, p.lat),
     );
     aircraft.clearLayers();
     planes.forEach((p) => {
