@@ -580,9 +580,33 @@ function openSynthesis() {
     air = 374724.29,
     noise = 26794.99,
     both = 17079.79;
+  const communes = Object.values(state.stats || {});
+  const noiseRanking = communes
+    .map((commune) => ({
+      ...commune,
+      exposed: (commune.population * commune.bruit_degrade_pct) / 100,
+    }))
+    .sort((a, b) => b.exposed - a.exposed)
+    .slice(0, 5);
+  const bothRanking = communes
+    .map((commune) => ({
+      ...commune,
+      exposed: (commune.population * commune.cumul_tres_degrade_pct) / 100,
+    }))
+    .sort((a, b) => b.exposed - a.exposed)
+    .slice(0, 5);
   $("synthesisContent").innerHTML =
-    `<div class="synthesis-dashboard-head"><span class="detail-tag">SYNTHÈSE DÉPARTEMENTALE</span><h2>Nuisances et expositions · Val-d’Oise</h2><p>Une vue d’ensemble des données disponibles et de leurs millésimes.</p></div><div class="synthesis-dashboard-kpis"><div class="kpi-tile"><small>Population étudiée</small><strong>${fmt(pop)}</strong><em>Airparif–Bruitparif 2024</em></div><div class="kpi-tile"><small>Air très dégradé</small><strong>${fmt((100 * air) / pop, 1)} %</strong><em>${fmt(air)} habitants estimés</em></div><div class="kpi-tile warn"><small>Bruit très dégradé</small><strong>${fmt((100 * noise) / pop, 1)} %</strong><em>${fmt(noise)} habitants estimés</em></div><div class="kpi-tile warn"><small>Cumul maximal</small><strong>${fmt((100 * both) / pop, 1)} %</strong><em>${fmt(both)} habitants estimés</em></div><div class="kpi-tile"><small>Communes</small><strong>183</strong><em>géographie actuelle</em></div></div><section class="synthesis-viz"><strong>Exposition départementale</strong>${bar("Air très dégradé", (100 * air) / pop, "#8b4b73")}${bar("Bruit très dégradé", (100 * noise) / pop, "#d66b32")}${bar("Cumul maximal", (100 * both) / pop, "#6b243e")}</section><section class="synthesis-viz"><strong>Sources cartographiées</strong>${bar("Routes principales", 100, "#c15a37")}${bar("Réseau ferré", 100, "#65448f")}${bar("Survols ADS-B", 100, "#365b83")}</section><div class="synthesis-insights"><strong>À retenir</strong><p>La qualité de l’air et le bruit sont deux indicateurs différents : leurs catégories ne doivent pas être confondues.</p><p>Les cartes de bruit sont des moyennes réglementaires. Les avions sont les seuls objets suivis directement dans la carte.</p><p>Le trafic routier direct est accessible par Sytadin, sans fabriquer de correspondance acoustique.</p></div>`;
+    `<div class="synthesis-dashboard-head"><span class="detail-tag">SYNTHÈSE DÉPARTEMENTALE</span><h2>Où se concentrent les nuisances ?</h2><p>Population estimée dans les classes les plus dégradées · Airparif–Bruitparif 2024.</p></div><div class="synthesis-dashboard-kpis"><div class="kpi-tile"><small>Population étudiée</small><strong>${fmt(pop)}</strong><em>habitants</em></div><div class="kpi-tile"><small>Air très dégradé</small><strong>${fmt(air)}</strong><em>${fmt((100 * air) / pop, 1)} % des habitants</em></div><div class="kpi-tile warn"><small>Bruit très dégradé</small><strong>${fmt(noise)}</strong><em>${fmt((100 * noise) / pop, 1)} % des habitants</em></div><div class="kpi-tile warn"><small>Cumul air + bruit</small><strong>${fmt(both)}</strong><em>${fmt((100 * both) / pop, 1)} % des habitants</em></div><div class="kpi-tile"><small>Communes concernées</small><strong>${communes.filter((c) => c.bruit_degrade_pct > 0).length}</strong><em>par le bruit très dégradé</em></div></div><section class="synthesis-viz"><strong>Poids départemental</strong>${bar("Air très dégradé", (100 * air) / pop, "#8b4b73")}${bar("Bruit très dégradé", (100 * noise) / pop, "#d66b32")}${bar("Cumul air + bruit", (100 * both) / pop, "#6b243e")}</section><section class="synthesis-viz"><strong>Plus grands effectifs exposés au bruit</strong><small class="synthesis-caption">Habitants estimés · part de la commune</small>${rankingBars(noiseRanking, "bruit_degrade_pct", "#d66b32")}</section><section class="synthesis-viz"><strong>Plus grands effectifs en cumul</strong><small class="synthesis-caption">Air et bruit très dégradés · habitants estimés</small>${rankingBars(bothRanking, "cumul_tres_degrade_pct", "#6b243e")}</section>`;
   $("synthesisDialog").showModal();
+}
+function rankingBars(rows, percentageKey, color) {
+  const maximum = Math.max(...rows.map((row) => row.exposed), 1);
+  return rows
+    .map(
+      (row) =>
+        `<div class="synthesis-bar-row"><div><span>${esc(row.nom)}</span><b>${fmt(row.exposed)} hab. · ${fmt(row[percentageKey], 1)} %</b></div><div class="synthesis-bar-track"><i style="--bar-width:${(100 * row.exposed) / maximum}%;--bar-color:${color}"></i></div></div>`,
+    )
+    .join("");
 }
 function bar(label, v, color) {
   return `<div class="synthesis-bar-row"><div><span>${label}</span><b>${fmt(v, 1)} %</b></div><div class="synthesis-bar-track"><i style="--bar-width:${Math.min(100, v)}%;--bar-color:${color}"></i></div></div>`;

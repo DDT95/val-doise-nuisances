@@ -291,6 +291,12 @@
   font-weight: 800;
   letter-spacing: 0.12em;
 }
+.synthesis-caption {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 9px;
+}
 .layer-cards {
   gap: 0;
 }
