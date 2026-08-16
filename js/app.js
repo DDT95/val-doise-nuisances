@@ -86,7 +86,7 @@ async function loadTraffic() {
     trafficLayer.clearLayers();
     for (const t of grid.tiles)
       L.imageOverlay(
-        `https://www1.sytadin.fr/carto/dynamique/${sync.dossier}/tms/1.0.0/bouchons/${grid.zoom}/${t.x}/${t.y}.png`,
+        `data/traffic/${grid.zoom}/${t.x}-${t.y}.png?v=${sync.dossier}`,
         t.bounds,
         { pane: "traffic", opacity: 0.95, interactive: false },
       ).addTo(trafficLayer);
@@ -491,6 +491,13 @@ function openSynthesis() {
 function bar(label, v, color) {
   return `<div class="synthesis-bar-row"><div><span>${label}</span><b>${fmt(v, 1)} %</b></div><div class="synthesis-bar-track"><i style="--bar-width:${Math.min(100, v)}%;--bar-color:${color}"></i></div></div>`;
 }
+$("clearAll").onclick = () => {
+  document.querySelectorAll(".layer-card.active").forEach((button) => {
+    button.classList.remove("active");
+    toggle(button.dataset.layer, false);
+  });
+  $("detailPanel").classList.remove("open");
+};
 $("resetView").onclick = () =>
   state.layers.communes &&
   map.fitBounds(state.layers.communes.getBounds(), { padding: [16, 16] });

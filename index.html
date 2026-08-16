@@ -65,97 +65,102 @@
         >
         <div id="searchResults" class="search-results" hidden></div>
         <div class="quick-actions">
-          <button id="resetView">Recentrer</button
+          <button id="clearAll">Tout effacer</button
+          ><button id="resetView">Recentrer</button
           ><button id="openData">Portrait du 95</button>
         </div>
-        <div class="layer-group">
-          <span>BRUIT ROUTIER</span>
-          <div class="layer-cards">
-            <button class="layer-card" data-layer="roadNoise">
-              <i class="layer-swatch noise-road"></i
-              ><span
-                ><b>Niveaux sonores routiers</b
-                ><small>Carte stratégique · nuit · classes dB(A)</small></span
-              ><i class="layer-switch"></i></button
-            ><button class="layer-card active" data-layer="roads">
-              <i class="layer-swatch road"></i
-              ><span
-                ><b>Axes routiers principaux</b
-                ><small>A1 · A15 · A115 · A104 · N184 · RD</small></span
-              ><i class="layer-switch"></i>
-            </button>
+        <div class="layers-scroll" aria-label="Couches cartographiques">
+          <div class="layer-group">
+            <span>BRUIT ROUTIER</span>
+            <div class="layer-cards">
+              <button class="layer-card" data-layer="roadNoise">
+                <i class="layer-swatch noise-road"></i
+                ><span
+                  ><b>Niveaux sonores routiers</b
+                  ><small>Carte stratégique · nuit · classes dB(A)</small></span
+                ><i class="layer-switch"></i></button
+              ><button class="layer-card active" data-layer="roads">
+                <i class="layer-swatch road"></i
+                ><span
+                  ><b>Axes routiers principaux</b
+                  ><small>A1 · A15 · A115 · A104 · N184 · RD</small></span
+                ><i class="layer-switch"></i>
+              </button>
+            </div>
           </div>
-        </div>
-        <div class="layer-group">
-          <span>BRUIT FERROVIAIRE</span>
-          <div class="layer-cards">
-            <button class="layer-card" data-layer="railNoise">
-              <i class="layer-swatch noise-rail"></i
-              ><span
-                ><b>Niveaux sonores ferroviaires</b
-                ><small>Carte stratégique · Lden · classes dB(A)</small></span
-              ><i class="layer-switch"></i></button
-            ><button class="layer-card active" data-layer="rails">
-              <i class="layer-swatch rail"></i
-              ><span
-                ><b>Voies ferrées</b
-                ><small>Réseau et noms des lignes</small></span
-              ><i class="layer-switch"></i>
-            </button>
+          <div class="layer-group">
+            <span>BRUIT FERROVIAIRE</span>
+            <div class="layer-cards">
+              <button class="layer-card" data-layer="railNoise">
+                <i class="layer-swatch noise-rail"></i
+                ><span
+                  ><b>Niveaux sonores ferroviaires</b
+                  ><small>Carte stratégique · Lden · classes dB(A)</small></span
+                ><i class="layer-switch"></i></button
+              ><button class="layer-card active" data-layer="rails">
+                <i class="layer-swatch rail"></i
+                ><span
+                  ><b>Voies ferrées</b
+                  ><small>Réseau et noms des lignes</small></span
+                ><i class="layer-switch"></i>
+              </button>
+            </div>
           </div>
-        </div>
-        <div class="layer-group">
-          <span>QUALITÉ DE L’AIR</span>
-          <div class="layer-cards">
-            <button class="layer-card" data-layer="air">
-              <i class="layer-swatch air"></i
-              ><span
-                ><b>Population exposée</b
-                ><small>Airparif–Bruitparif · statistique 2024</small></span
-              ><i class="layer-switch"></i>
-            </button>
+          <div class="layer-group">
+            <span>QUALITÉ DE L’AIR</span>
+            <div class="layer-cards">
+              <button class="layer-card" data-layer="air">
+                <i class="layer-swatch air"></i
+                ><span
+                  ><b>Population exposée</b
+                  ><small>Airparif–Bruitparif · statistique 2024</small></span
+                ><i class="layer-switch"></i>
+              </button>
+            </div>
           </div>
-        </div>
-        <div class="layer-group live-group">
-          <span>EN DIRECT</span>
-          <div class="layer-cards">
-            <button class="layer-card active" data-layer="traffic">
-              <span class="live-pulse"></span
-              ><span
-                ><b>Circulation maintenant</b
-                ><small id="trafficStatus"
-                  >Sytadin · chargement du trafic…</small
-                ></span
-              ><i class="layer-switch"></i></button
-            ><button class="layer-card active" data-layer="aircraft">
-              <i class="layer-swatch plane"></i
-              ><span
-                ><b>Avions maintenant</b
-                ><small id="aircraftMenuStatus"
-                  >Positions et altitudes ADS-B</small
-                ></span
-              ><i class="layer-switch"></i></button
-            ><button class="layer-card active" data-layer="liveAir">
-              <span class="live-pulse air-dot"></span
-              ><span
-                ><b>Qualité de l’air aujourd’hui</b
-                ><small id="liveAirStatus"
-                  >Indice ATMO · chargement…</small
-                ></span
-              ><i class="layer-switch"></i>
-            </button>
+          <div class="layer-group live-group">
+            <span>EN DIRECT</span>
+            <div class="layer-cards">
+              <button class="layer-card active" data-layer="traffic">
+                <span class="live-pulse"></span
+                ><span
+                  ><b>Circulation maintenant</b
+                  ><small id="trafficStatus"
+                    >Sytadin · chargement du trafic…</small
+                  ></span
+                ><i class="layer-switch"></i></button
+              ><button class="layer-card active" data-layer="aircraft">
+                <i class="layer-swatch plane"></i
+                ><span
+                  ><b>Avions maintenant</b
+                  ><small id="aircraftMenuStatus"
+                    >Positions et altitudes ADS-B</small
+                  ></span
+                ><i class="layer-switch"></i></button
+              ><button class="layer-card active" data-layer="liveAir">
+                <span class="live-pulse air-dot"></span
+                ><span
+                  ><b>Qualité de l’air aujourd’hui</b
+                  ><small id="liveAirStatus"
+                    >Indice ATMO · chargement…</small
+                  ></span
+                ><i class="layer-switch"></i>
+              </button>
+            </div>
           </div>
-        </div>
-        <div class="layer-group">
-          <span>REPÈRES</span>
-          <div class="layer-cards">
-            <button class="layer-card active" data-layer="communes">
-              <i class="layer-swatch commune"></i
-              ><span
-                ><b>Limites communales et portraits</b
-                ><small>183 territoires · cliquez pour les données</small></span
-              ><i class="layer-switch"></i>
-            </button>
+          <div class="layer-group">
+            <span>REPÈRES</span>
+            <div class="layer-cards">
+              <button class="layer-card active" data-layer="communes">
+                <i class="layer-swatch commune"></i
+                ><span
+                  ><b>Limites communales et portraits</b
+                  ><small
+                    >183 territoires · cliquez pour les données</small
+                  ></span
+                ><i class="layer-switch"></i>
+              </button>
+            </div>
           </div>
         </div>
         <button id="openMethod" class="sources-inline">
