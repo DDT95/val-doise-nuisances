@@ -105,6 +105,10 @@
 .map-shell {
   border-radius: 25px;
 }
+#map,
+.leaflet-container {
+  background: #59616a;
+}
 .detail-panel {
   top: 16px;
   right: 16px;
