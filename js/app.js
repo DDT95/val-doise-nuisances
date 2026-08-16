@@ -303,6 +303,49 @@ function setupSearch(geo) {
 }
 const aircraft = L.layerGroup();
 state.layers.aircraft = aircraft;
+let movingAircraft = [];
+
+function projectedPosition(item, now) {
+  const elapsed = Math.min((now - item.seenAt) / 1000, 75);
+  const speedKmh = Number(item.data.gs) * 1.852;
+  const heading = Number(item.data.track);
+  if (
+    !Number.isFinite(speedKmh) ||
+    !Number.isFinite(heading) ||
+    speedKmh < 15 ||
+    elapsed <= 0
+  )
+    return [item.data.lat, item.data.lon];
+  const distanceKm = (speedKmh * elapsed) / 3600;
+  const angularDistance = distanceKm / 6371.0088;
+  const bearing = (heading * Math.PI) / 180;
+  const lat1 = (item.data.lat * Math.PI) / 180;
+  const lon1 = (item.data.lon * Math.PI) / 180;
+  const lat2 = Math.asin(
+    Math.sin(lat1) * Math.cos(angularDistance) +
+      Math.cos(lat1) * Math.sin(angularDistance) * Math.cos(bearing),
+  );
+  const lon2 =
+    lon1 +
+    Math.atan2(
+      Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(lat1),
+      Math.cos(angularDistance) - Math.sin(lat1) * Math.sin(lat2),
+    );
+  return [(lat2 * 180) / Math.PI, (lon2 * 180) / Math.PI];
+}
+
+function animateAircraft(now) {
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    movingAircraft.forEach((item) => {
+      const position = projectedPosition(item, now);
+      item.marker.setLatLng(position);
+      item.circle.setLatLng(position);
+    });
+  }
+  requestAnimationFrame(animateAircraft);
+}
+requestAnimationFrame(animateAircraft);
+
 function band(ft) {
   if (!Number.isFinite(ft))
     return { label: "Altitude inconnue", color: "#718096", radius: 500 };
@@ -334,17 +377,19 @@ async function loadAircraft() {
         insideTerritory(p.lon, p.lat),
     );
     aircraft.clearLayers();
+    movingAircraft = [];
+    const seenAt = performance.now();
     planes.forEach((p) => {
       const ft = Number(p.alt_baro),
         b = band(ft);
-      L.circle([p.lat, p.lon], {
+      const circle = L.circle([p.lat, p.lon], {
         radius: b.radius,
         color: b.color,
         weight: 1,
         fillOpacity: 0.07,
         interactive: false,
       }).addTo(aircraft);
-      L.marker([p.lat, p.lon], {
+      const marker = L.marker([p.lat, p.lon], {
         icon: L.divIcon({
           html: `<div class="plane-marker" style="transform:rotate(${Number(p.track) || 0}deg)">✈</div>`,
           className: "",
@@ -361,9 +406,10 @@ async function loadAircraft() {
             `<span class="detail-tag">AÉRONEF · DIRECT</span><h2>${esc((p.flight || p.r || p.hex || "Aéronef").trim())}</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Altitude</small><strong>${Number.isFinite(ft) ? fmt(ft) + " ft" : "—"}</strong><em>${Number.isFinite(ft) ? fmt(ft * 0.3048) + " m" : ""}</em></div><div class="kpi-tile"><small>Vitesse sol</small><strong>${Number.isFinite(Number(p.gs)) ? fmt(Number(p.gs) * 1.852) + " km/h" : "—"}</strong></div><div class="kpi-tile"><small>Type</small><strong>${esc(p.t || "—")}</strong></div><div class="kpi-tile warn"><small>Lecture</small><strong>${b.label}</strong></div></div><p class="flag-note">Position ADS-B en direct. L’anneau traduit uniquement l’altitude : ce n’est pas un niveau en dB(A).</p>`,
           ),
         );
+      movingAircraft.push({ data: p, marker, circle, seenAt });
     });
     $("aircraftMenuStatus").textContent =
-      `${planes.length} avions · ${new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
+      `${planes.length} avions en mouvement · ${new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
   } catch {
     $("aircraftMenuStatus").textContent = "Dernier flux indisponible";
   }
