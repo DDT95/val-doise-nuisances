@@ -3,7 +3,7 @@ const $ = (id) => document.getElementById(id),
 L.control.zoom({ position: "bottomright" }).addTo(map);
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
-  attribution: "© contributeurs OpenStreetMap",
+  attribution: "© OpenStreetMap",
 }).addTo(map);
 map.createPane("noise");
 map.getPane("noise").style.zIndex = 410;

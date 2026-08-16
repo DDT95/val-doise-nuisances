@@ -109,6 +109,9 @@
 .leaflet-container {
   background: #eef1f4;
 }
+.leaflet-tile-pane {
+  filter: grayscale(0.85) saturate(0.35) brightness(1.06);
+}
 .detail-panel {
   top: 16px;
   right: 16px;
