@@ -1,14 +1,10 @@
 const $ = (id) => document.getElementById(id),
   map = L.map("map", { zoomControl: false }).setView([49.08, 2.1], 10);
 L.control.zoom({ position: "bottomright" }).addTo(map);
-L.tileLayer(
-  "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",
-  {
-    subdomains: "abcd",
-    maxZoom: 19,
-    attribution: "© OpenStreetMap · © CARTO",
-  },
-).addTo(map);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+  attribution: "© contributeurs OpenStreetMap",
+}).addTo(map);
 map.createPane("noise");
 map.getPane("noise").style.zIndex = 410;
 map.createPane("traffic");
