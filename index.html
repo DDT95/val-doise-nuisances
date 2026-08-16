@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Bruit, qualité de l’air et survols en direct dans le Val-d’Oise.">
+  <title>Nuisances · Val-d’Oise · DDT 95</title>
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand-logo-link" href="https://ddt95.github.io/atlas-territorial-95/" aria-label="Retour à l’Atlas territorial"><img class="brand-logo" src="assets/prefet-val-doise.svg" alt="Préfet du Val-d’Oise"></a>
+  <div class="title-block"><span class="eyebrow">NUISANCES · SANTÉ ENVIRONNEMENTALE · VAL-D’OISE</span><h1>Où les nuisances se cumulent-elles ?</h1><p>Bruit des transports, qualité de l’air et survols observés en direct</p></div>
+  <button id="mobileLayers" class="mobile-layers" aria-controls="layerSidebar" aria-expanded="false">Données</button>
+  <button id="openDataTop" class="livebox"><span class="fresh-dot"></span><div><strong>Données & méthode</strong><small>Sources, calculs et limites</small></div></button>
+</header>
+<main class="workspace">
+  <aside id="layerSidebar" class="sidebar">
+    <div class="sidebar-intro"><span class="eyebrow">LECTURE CARTOGRAPHIQUE</span><h2>Voir ce qui pèse sur le cadre de vie</h2><p>Repérez les secteurs où bruit et pollution de l’air se croisent, puis observez les aéronefs présents.</p></div>
+    <label class="search-box"><span>Rechercher une commune</span><div><input id="searchInput" type="search" placeholder="Ex. Pontoise" autocomplete="off"><button id="searchButton" aria-label="Rechercher">→</button></div></label>
+    <div id="searchResults" class="search-results" hidden></div>
+    <div class="quick-actions"><button id="resetView">Recentrer</button><button id="openData">Données & méthode</button></div>
+    <div class="layer-group"><span>EXPOSITION STRUCTURELLE · 2024</span><div class="layer-cards">
+      <button class="layer-card active" data-layer="airbruit"><i class="layer-swatch combined"></i><span><b>Coexposition air-bruit</b><small>Airparif × Bruitparif · 9 classes</small></span><i class="layer-switch"></i></button>
+      <button class="layer-card active" data-layer="communes"><i class="layer-swatch boundary"></i><span><b>Communes</b><small>Cliquez pour le portrait d’exposition</small></span><i class="layer-switch"></i></button>
+    </div></div>
+    <div class="layer-group"><span>OBSERVATION EN DIRECT</span><div class="layer-cards">
+      <button class="layer-card active" data-layer="aircraft"><i class="layer-swatch aircraft"></i><span><b>Aéronefs en vol</b><small>Position ADS-B · actualisée chaque minute</small></span><i class="layer-switch"></i></button>
+    </div></div>
+    <div class="air-status"><span class="pulse"></span><div><strong id="aircraftCount">Connexion au ciel…</strong><small id="aircraftTime">Source ouverte ADSB.lol</small></div></div>
+    <button id="openMethod" class="sources-inline">Sources, millésimes et licences</button>
+    <div class="sidebar-footer"><span class="fresh-dot"></span><div><strong>3 référentiels publics croisés</strong><small>Airparif · Bruitparif · ADSB.lol</small></div></div>
+  </aside>
+  <section class="map-shell"><div id="map"></div>
+    <div class="map-legend"><strong>Coexposition air-bruit</strong><div class="matrix"><i class="c11"></i><i class="c12"></i><i class="c13"></i><i class="c21"></i><i class="c22"></i><i class="c23"></i><i class="c31"></i><i class="c32"></i><i class="c33"></i></div><div class="axis"><span>Air plus dégradé →</span><span>↑ Bruit plus dégradé</span></div></div>
+    <div class="map-note"><span class="pulse"></span><span id="mapStatus">Cliquez une commune ou un aéronef</span></div>
+  </section>
+  <aside id="detailPanel" class="detail-panel" aria-live="polite"><button id="closeDetail" class="close-btn" aria-label="Fermer">×</button><div id="detailContent"></div></aside>
+</main>
+<dialog id="methodDialog" class="dialog"><button class="dialog-close" aria-label="Fermer">×</button><div class="dialog-header"><span class="eyebrow">TRAÇABILITÉ</span><h2>Comprendre la carte</h2><p>Des données solides, et des limites dites franchement.</p></div><div class="dialog-body">
+  <h3>La couche principale</h3><p>La carte 2024 croise l’indice stratégique de qualité de l’air d’Airparif (NO₂, PM₁₀ et PM₂,₅) avec les cartes stratégiques de bruit des transports consolidées par Bruitparif. Les données acoustiques reposent principalement sur les trafics 2019 ; elles modélisent routes, voies ferrées et aéronefs avec le relief et les bâtiments. Ce ne sont pas des mesures instantanées.</p>
+  <h3>Les avions en direct</h3><p>Les positions proviennent des signaux ADS-B reçus par le réseau communautaire ADSB.lol. Le cercle autour d’un aéronef est un <strong>signal de proximité acoustique</strong> calculé uniquement à partir de son altitude : il aide à repérer les survols bas, mais ne constitue jamais une mesure ou une prévision en dB(A). Le type d’avion, la poussée, la météo et le bâti manquent pour un calcul acoustique réglementaire.</p>
+  <h3>Circulation et population</h3><p>Le trafic, les vitesses, la part de poids lourds, le revêtement, le relief et les écrans acoustiques sont déjà intégrés aux cartes stratégiques selon la méthode européenne CNOSSOS. La population est spatialisée au bâti dans la statistique officielle. Superposer un trafic routier instantané donnerait une image séduisante mais non comparable au Lden sur 24 h ; nous ne fabriquons donc pas de faux décibels.</p>
+  <div class="source-cards"><div><h3>Données et méthode</h3><p>Liens de téléchargement, licences et chaîne de traitement.</p><a href="SOURCES.md" target="_blank">Consulter les sources ↗</a></div><div><h3>Code source</h3><p>Application et données dérivées versionnées.</p><a href="https://github.com/DDT95/val-doise-nuisances" target="_blank" rel="noopener">Voir le dépôt ↗</a></div></div>
+</div></dialog>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script><script src="js/app.js?v=1"></script>
+</body></html>
