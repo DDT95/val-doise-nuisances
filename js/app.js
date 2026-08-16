@@ -111,16 +111,6 @@ function addTerritoryMask(buffer) {
     fillRule: "evenodd",
     interactive: false,
   }).addTo(map);
-  state.layers.bufferOutline = L.geoJSON(buffer, {
-    pane: "territoryMask",
-    style: {
-      color: "#000091",
-      weight: 1.2,
-      opacity: 0.45,
-      fillOpacity: 0,
-      interactive: false,
-    },
-  }).addTo(map);
 }
 const roadNoise = L.imageOverlay("data/noise-road.png", bounds, {
     pane: "noise",
