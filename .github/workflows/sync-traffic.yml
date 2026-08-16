@@ -1,0 +1,40 @@
+name: Synchroniser les flux en direct
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-live-feeds
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Récupérer le millésime cartographique courant
+        run: curl --fail --silent --show-error --retry 3 https://www.sytadin.fr/carto/dynamique/cartoTempsReel.json -o data/traffic-sync.json
+      - name: Récupérer les avions autour du Val-d’Oise
+        run: curl --fail --silent --show-error --retry 3 https://api.adsb.lol/v2/lat/49.08/lon/2.10/dist/45 -o data/aircraft-live.json
+      - name: Récupérer l’indice ATMO du jour
+        run: |
+          today=$(date -u +%F)
+          curl --fail --silent --show-error --retry 3 --get 'https://data.atmo-france.org/geoserver/ind/ows' \
+            --data-urlencode 'service=WFS' --data-urlencode 'version=2.0.0' \
+            --data-urlencode 'request=GetFeature' --data-urlencode 'typeNames=ind_atmo_2021' \
+            --data-urlencode 'outputFormat=application/json' \
+            --data-urlencode "CQL_FILTER=code_zone LIKE '95%' AND date_ech='${today}'" \
+            -o data/air-live.json
+      - name: Publier uniquement en cas de changement
+        run: |
+          if git diff --quiet -- data/traffic-sync.json data/aircraft-live.json data/air-live.json; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/traffic-sync.json data/aircraft-live.json data/air-live.json
+          git commit -m "Actualiser les flux en direct"
+          git push
