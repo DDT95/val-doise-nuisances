@@ -1,5 +1,21 @@
 # Sources, traitements et limites
 
+## Cartes stratégiques de bruit du Val-d’Oise
+
+- Bruit routier, type A, indicateur nocturne Ln, troisième échéance : https://www.data.gouv.fr/datasets/carte-strategique-du-bruit-infrastructures-routiere-type-a-lden
+- Bruit ferroviaire SNCF, type A, indicateur Lden, troisième échéance : https://www.data.gouv.fr/datasets/carte-strategique-du-bruit-infrastructures-ferroviaire-sncf-type-a-lden
+- Producteur et diffuseur : DDT du Val-d’Oise.
+- Licence : Licence Ouverte 2.0.
+
+Les couches sont rasterisées à 100 mètres pour la consultation web. La valeur de classe reste interrogeable sur la carte. Les routes principales et voies ferrées nommées proviennent d’OpenStreetMap, extraction du 16 août 2026, ODbL.
+
+## Circulation routière directe
+
+- Service officiel francilien : https://www.sytadin.fr/
+- Données ouvertes nationales Bison Futé : https://www.data.gouv.fr/datasets/etat-de-circulation-en-temps-reel-sur-le-reseau-national-routier-non-concede
+
+Le flux Bison Futé est mis à jour toutes les six minutes, mais son référentiel public ne contient actuellement pas les stations de la DiRIF nécessaires pour cartographier correctement le Val-d’Oise. La carte renvoie donc vers Sytadin et n’invente ni vitesse ni débit local.
+
 ## Coexposition air-bruit 2024
 
 - Producteurs : Airparif et Bruitparif.
