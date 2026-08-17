@@ -1,10 +1,8 @@
 {"ac":[
-{"hex":"44cdc5","type":"adsb_icao","flight":"BEL2ET  ","r":"OO-SNE","t":"A320","alt_baro":31425,"alt_geom":33100,"gs":469.6,"ias":291,"tas":472,"mach":0.792,"wd":314,"ws":45,"oat":-39,"tat":-10,"track":43.96,"track_rate":0.00,"roll":-0.35,"mag_heading":36.56,"true_heading":38.49,"baro_rate":-960,"geom_rate":-928,"squawk":"2225","emergency":"none","category":"A3","nav_qnh":1012.8,"nav_altitude_mcp":27008,"lat":49.590958,"lon":2.037241,"nic":8,"rc":186,"seen_pos":0.000,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":117626,"seen":0.0,"rssi":-21.9,"dst":30.765,"dir":355.4},
-{"hex":"440d92","type":"adsb_icao","flight":"TAY1LA  ","r":"OE-IXP","t":"B738","alt_baro":1275,"alt_geom":1575,"gs":127.3,"ias":136,"tas":140,"mach":0.208,"wd":315,"ws":17,"track":266.40,"track_rate":0.03,"roll":0.00,"mag_heading":269.65,"true_heading":271.80,"baro_rate":-512,"geom_rate":-544,"squawk":"1000","category":"A3","nav_qnh":1016.8,"nav_altitude_mcp":4000,"nav_altitude_fms":1904,"nav_heading":263.67,"lat":49.002655,"lon":2.688036,"nic":8,"rc":186,"seen_pos":0.190,"version":2,"nic_baro":1,"nac_p":11,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":265176,"seen":0.1,"rssi":-14.0,"dst":23.555,"dir":101.1}
 ]
 ,"msg": "No error"
-,"now": 1787007708009
-,"total": 2
-,"ctime": 1787007708009
+,"now": 1787009460501
+,"total": 0
+,"ctime": 1787009460501
 ,"ptime": 0
 }
