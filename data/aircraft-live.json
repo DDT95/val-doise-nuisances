@@ -1,9 +1,9 @@
 {"ac":[
-{"hex":"738075","type":"adsb_icao","flight":"ELY220  ","r":"4X-ECE","t":"B772","alt_baro":"ground","gs":4.8,"true_heading":70.31,"category":"A5","lat":49.005936,"lon":2.560325,"nic":8,"rc":186,"seen_pos":54.212,"version":2,"nac_p":10,"nac_v":2,"sil":3,"sil_type":"perhour","sda":2,"mlat":[],"tisb":[],"messages":22,"seen":54.2,"rssi":-22.9,"dst":18.616,"dir":103.6}
+{"hex":"440118","type":"adsb_icao","flight":"TAY4437 ","r":"OE-IBO","t":"B734","alt_baro":18275,"alt_geom":19175,"gs":360.6,"ias":294,"tas":390,"mach":0.620,"wd":313,"ws":42,"oat":-13,"tat":7,"track":264.59,"track_rate":0.06,"roll":-0.35,"mag_heading":267.36,"true_heading":269.20,"baro_rate":2432,"geom_rate":2400,"squawk":"7647","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":28992,"nav_altitude_fms":33008,"nav_heading":265.78,"lat":48.941025,"lon":1.607877,"nic":8,"rc":186,"seen_pos":0.170,"version":2,"nic_baro":1,"nac_p":10,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":8559,"seen":0.0,"rssi":-14.3,"dst":21.064,"dir":246.9}
 ]
 ,"msg": "No error"
-,"now": 1786924771000
+,"now": 1786930933001
 ,"total": 1
-,"ctime": 1786924771000
+,"ctime": 1786930933001
 ,"ptime": 0
 }
