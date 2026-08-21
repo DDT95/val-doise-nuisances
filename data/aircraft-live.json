@@ -1,10 +1,9 @@
 {"ac":[
-{"hex":"4bb144","type":"adsb_icao","flight":"THY4    ","r":"TC-LJD","t":"B77W","alt_baro":35000,"alt_geom":35550,"gs":558.8,"ias":280,"tas":486,"mach":0.824,"wd":267,"ws":76,"oat":-44,"tat":-13,"track":104.51,"roll":0.18,"mag_heading":105.29,"true_heading":107.15,"baro_rate":0,"geom_rate":0,"squawk":"1145","emergency":"none","category":"A5","nav_qnh":1012.8,"nav_altitude_mcp":35008,"nav_heading":101.25,"lat":48.736376,"lon":1.708229,"nic":8,"rc":186,"seen_pos":0.530,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":62705,"seen":0.0,"rssi":-7.3,"dst":25.779,"dir":217.0},
-{"hex":"89661e","type":"adsb_icao","flight":"UAE70   ","r":"A6-EXA","t":"A359","alt_baro":33525,"alt_geom":33825,"gs":551.8,"ias":299,"tas":502,"mach":0.848,"wd":258,"ws":58,"oat":-42,"tat":-9,"track":108.93,"track_rate":0.00,"roll":-0.88,"mag_heading":110.21,"true_heading":112.36,"baro_rate":704,"geom_rate":768,"squawk":"2263","emergency":"none","category":"A5","nav_qnh":1013.6,"nav_altitude_mcp":35008,"nav_heading":109.69,"lat":49.352783,"lon":2.794330,"nic":8,"rc":186,"seen_pos":0.214,"version":2,"nic_baro":1,"nac_p":10,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":31345,"seen":0.1,"rssi":-13.2,"dst":31.734,"dir":58.7}
+{"hex":"440356","type":"adsb_icao","flight":"TAY4PO  ","r":"OE-FBT","t":"DA42","alt_baro":2850,"alt_geom":3150,"gs":173.5,"ias":165,"tas":172,"mach":0.264,"wd":3,"ws":17,"track":265.70,"track_rate":0.00,"roll":-0.18,"mag_heading":269.30,"true_heading":271.47,"baro_rate":-960,"geom_rate":-992,"squawk":"1000","category":"A3","nav_qnh":1016.8,"nav_altitude_mcp":4992,"nav_heading":263.67,"lat":49.037289,"lon":2.758653,"nic":8,"rc":186,"seen_pos":0.147,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":151900,"seen":0.1,"rssi":-4.8,"dst":25.983,"dir":95.4}
 ]
 ,"msg": "No error"
-,"now": 1787355184501
-,"total": 2
-,"ctime": 1787355184501
+,"now": 1787356412500
+,"total": 1
+,"ctime": 1787356412500
 ,"ptime": 0
 }
