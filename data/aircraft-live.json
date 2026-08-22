@@ -1,10 +1,10 @@
 {"ac":[
-{"hex":"440bc2","type":"adsb_icao","flight":"BCS19U  ","r":"OE-LNE","t":"B752","alt_baro":35000,"alt_geom":35425,"gs":407.5,"ias":266,"tas":462,"mach":0.784,"wd":285,"ws":62,"oat":-44,"tat":-16,"track":316.79,"track_rate":0.00,"roll":0.53,"mag_heading":310.61,"true_heading":312.73,"baro_rate":0,"geom_rate":0,"squawk":"5720","emergency":"none","category":"A4","nav_qnh":1013.6,"nav_altitude_mcp":35008,"nav_heading":310.08,"nav_modes":["vnav","tcas"],"lat":49.204285,"lon":2.661508,"nic":8,"rc":186,"seen_pos":0.135,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":65135,"seen":0.1,"rssi":-21.3,"dst":23.239,"dir":71.1},
-{"hex":"407914","type":"adsb_icao","flight":"EXS85BH ","r":"G-DRTZ","t":"B738","alt_baro":36000,"alt_geom":36550,"gs":432.5,"ias":261,"tas":468,"mach":0.788,"wd":281,"ws":55,"oat":-41,"tat":-12,"track":333.79,"track_rate":0.00,"roll":0.00,"mag_heading":326.25,"true_heading":328.41,"baro_rate":0,"geom_rate":0,"squawk":"4003","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_altitude_fms":36000,"nav_heading":326.25,"lat":49.343603,"lon":2.812934,"nic":8,"rc":186,"seen_pos":0.025,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":110379,"seen":0.0,"rssi":-20.1,"dst":32.086,"dir":60.2}
+{"hex":"a913d6","type":"adsb_icao","flight":"UAL380  ","r":"N684UA","t":"B763","alt_baro":39025,"alt_geom":39675,"gs":535.9,"ias":245,"tas":464,"mach":0.792,"wd":278,"ws":72,"oat":-47,"tat":-19,"track":102.61,"track_rate":0.00,"roll":0.18,"mag_heading":101.78,"true_heading":103.46,"baro_rate":0,"geom_rate":0,"squawk":"1171","emergency":"none","category":"A5","nav_qnh":1012.8,"nav_altitude_mcp":39008,"nav_altitude_fms":39008,"nav_heading":99.84,"lat":48.953110,"lon":1.118915,"nic":8,"rc":186,"seen_pos":0.431,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":69694,"seen":0.1,"rssi":-10.6,"dst":39.293,"dir":259.2},
+{"hex":"49526b","type":"adsb_icao","flight":"RZO564  ","r":"CS-TSK","t":"A20N","alt_baro":38000,"alt_geom":38825,"gs":516.2,"ias":242,"tas":448,"mach":0.768,"wd":274,"ws":82,"oat":-49,"tat":-23,"track":62.29,"track_rate":-0.06,"roll":-0.70,"mag_heading":54.67,"true_heading":56.81,"baro_rate":0,"geom_rate":0,"squawk":"2267","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":38016,"nav_heading":0.00,"lat":48.531097,"lon":2.689326,"nic":8,"rc":186,"seen_pos":0.082,"version":2,"nic_baro":1,"nac_p":11,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":81782,"seen":0.1,"rssi":-7.5,"dst":40.364,"dir":144.5}
 ]
 ,"msg": "No error"
-,"now": 1787359140501
+,"now": 1787364277001
 ,"total": 2
-,"ctime": 1787359140501
+,"ctime": 1787364277001
 ,"ptime": 0
 }
