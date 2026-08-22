@@ -1,9 +1,10 @@
 {"ac":[
-{"hex":"440356","type":"adsb_icao","flight":"TAY4PO  ","r":"OE-FBT","t":"DA42","alt_baro":2850,"alt_geom":3150,"gs":173.5,"ias":165,"tas":172,"mach":0.264,"wd":3,"ws":17,"track":265.70,"track_rate":0.00,"roll":-0.18,"mag_heading":269.30,"true_heading":271.47,"baro_rate":-960,"geom_rate":-992,"squawk":"1000","category":"A3","nav_qnh":1016.8,"nav_altitude_mcp":4992,"nav_heading":263.67,"lat":49.037289,"lon":2.758653,"nic":8,"rc":186,"seen_pos":0.147,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":151900,"seen":0.1,"rssi":-4.8,"dst":25.983,"dir":95.4}
+{"hex":"440bc2","type":"adsb_icao","flight":"BCS19U  ","r":"OE-LNE","t":"B752","alt_baro":35000,"alt_geom":35425,"gs":407.5,"ias":266,"tas":462,"mach":0.784,"wd":285,"ws":62,"oat":-44,"tat":-16,"track":316.79,"track_rate":0.00,"roll":0.53,"mag_heading":310.61,"true_heading":312.73,"baro_rate":0,"geom_rate":0,"squawk":"5720","emergency":"none","category":"A4","nav_qnh":1013.6,"nav_altitude_mcp":35008,"nav_heading":310.08,"nav_modes":["vnav","tcas"],"lat":49.204285,"lon":2.661508,"nic":8,"rc":186,"seen_pos":0.135,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":65135,"seen":0.1,"rssi":-21.3,"dst":23.239,"dir":71.1},
+{"hex":"407914","type":"adsb_icao","flight":"EXS85BH ","r":"G-DRTZ","t":"B738","alt_baro":36000,"alt_geom":36550,"gs":432.5,"ias":261,"tas":468,"mach":0.788,"wd":281,"ws":55,"oat":-41,"tat":-12,"track":333.79,"track_rate":0.00,"roll":0.00,"mag_heading":326.25,"true_heading":328.41,"baro_rate":0,"geom_rate":0,"squawk":"4003","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_altitude_fms":36000,"nav_heading":326.25,"lat":49.343603,"lon":2.812934,"nic":8,"rc":186,"seen_pos":0.025,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":110379,"seen":0.0,"rssi":-20.1,"dst":32.086,"dir":60.2}
 ]
 ,"msg": "No error"
-,"now": 1787356412500
-,"total": 1
-,"ctime": 1787356412500
+,"now": 1787359140501
+,"total": 2
+,"ctime": 1787359140501
 ,"ptime": 0
 }
