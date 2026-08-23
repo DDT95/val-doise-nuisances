@@ -1,11 +1,9 @@
 {"ac":[
-{"hex":"45ce57","type":"adsb_icao","flight":"SRR6316 ","r":"OY-SRW","t":"B763","alt_baro":3500,"alt_geom":3900,"gs":163.6,"ias":170,"tas":180,"mach":0.272,"wd":120,"ws":19,"track":85.09,"track_rate":-0.03,"roll":-0.18,"mag_heading":86.66,"true_heading":88.71,"baro_rate":-896,"geom_rate":-864,"squawk":"4131","emergency":"none","category":"A5","nav_qnh":1020.8,"nav_altitude_mcp":4992,"nav_altitude_fms":5008,"nav_heading":83.67,"lat":48.978634,"lon":2.304599,"nic":8,"rc":186,"seen_pos":0.062,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":56237,"seen":0.0,"rssi":-10.0,"dst":10.085,"dir":127.0},
-{"hex":"398249","type":"adsb_icao","flight":"ASJ04SJ ","r":"F-HASJ","t":"C510","alt_baro":600,"alt_geom":950,"gs":80.2,"ias":105,"tas":104,"mach":0.160,"wd":59,"ws":21,"track":67.27,"roll":4.57,"mag_heading":66.09,"true_heading":68.16,"baro_rate":-384,"squawk":"4270","emergency":"none","category":"A1","nav_qnh":1020.8,"nav_altitude_mcp":800,"lat":48.952744,"lon":2.379033,"nic":9,"rc":75,"seen_pos":0.239,"version":2,"nic_baro":1,"nac_p":10,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":5775,"seen":0.0,"rssi":-18.7,"dst":13.368,"dir":124.7},
-{"hex":"4d2402","type":"adsb_icao","flight":"WZZ1641 ","r":"9H-WAD","t":"A21N","alt_baro":36000,"alt_geom":37350,"gs":503.3,"ias":252,"tas":440,"mach":0.764,"wd":245,"ws":63,"oat":-55,"tat":-29,"track":70.02,"track_rate":0.03,"roll":-0.18,"mag_heading":68.55,"true_heading":70.71,"baro_rate":0,"geom_rate":32,"squawk":"2354","emergency":"none","category":"A3","nav_qnh":1012.8,"nav_altitude_mcp":36000,"lat":48.866043,"lon":2.787217,"nic":8,"rc":186,"seen_pos":0.285,"version":2,"nic_baro":1,"nac_p":9,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":3,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":90454,"seen":0.0,"rssi":-6.7,"dst":29.928,"dir":115.1}
+{"hex":"4d2051","type":"adsb_icao","flight":"TEU5    ","r":"9H-JJC","t":"CL60","dbFlags":8,"alt_baro":"ground","alt_geom":325,"gs":73.0,"ias":134,"mach":0.204,"track":67.77,"track_rate":0.03,"roll":0.18,"mag_heading":66.27,"true_heading":67.50,"baro_rate":-576,"geom_rate":64,"squawk":"1000","category":"A2","nav_qnh":1020.0,"nav_altitude_mcp":800,"nav_heading":68.91,"lat":48.969381,"lon":2.440934,"nic":8,"rc":186,"seen_pos":0.025,"version":2,"nic_baro":1,"nac_p":11,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":194885,"seen":0.0,"rssi":-16.3,"dst":14.952,"dir":116.2}
 ]
 ,"msg": "No error"
-,"now": 1787528416501
-,"total": 3
-,"ctime": 1787528416501
+,"now": 1787529380500
+,"total": 1
+,"ctime": 1787529380500
 ,"ptime": 0
 }
