@@ -12,6 +12,7 @@ GetCapabilities, confirmé par des tentatives réelles renvoyant des erreurs
 nous-mêmes en GeoJSON.
 """
 import json
+import math
 import os
 import sys
 import urllib.parse
@@ -81,6 +82,66 @@ def parse_pos(elem):
     return nums[:2]
 
 
+SIMPLIFY_EPSILON = 0.00003  # ~3 m à cette latitude, sans effet visible à l'échelle du département
+
+
+def perp_dist(pt, a, b):
+    if a == b:
+        return math.hypot(pt[0] - a[0], pt[1] - a[1])
+    (x1, y1), (x2, y2) = a, b
+    x0, y0 = pt
+    num = abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1)
+    den = math.hypot(y2 - y1, x2 - x1)
+    return num / den
+
+
+def simplify_line(coords, epsilon=SIMPLIFY_EPSILON):
+    """Douglas-Peucker itératif : certaines géométries sources (ex. voies
+    ferrées SNCF) comptent des dizaines de milliers de points par tronçon,
+    produisant des fichiers de plusieurs dizaines de Mo. Une version
+    récursive risquerait un dépassement de pile sur ces cas extrêmes."""
+    if len(coords) < 3:
+        return coords
+    keep = [True] * len(coords)
+    stack = [(0, len(coords) - 1)]
+    while stack:
+        i0, i1 = stack.pop()
+        if i1 <= i0 + 1:
+            continue
+        start, end = coords[i0], coords[i1]
+        dmax, index = 0.0, i0
+        for i in range(i0 + 1, i1):
+            if not keep[i]:
+                continue
+            d = perp_dist(coords[i], start, end)
+            if d > dmax:
+                dmax, index = d, i
+        if dmax > epsilon:
+            stack.append((i0, index))
+            stack.append((index, i1))
+        else:
+            for i in range(i0 + 1, i1):
+                keep[i] = False
+    return [c for c, k in zip(coords, keep) if k]
+
+
+def simplify_geometry(geometry):
+    if not geometry:
+        return geometry
+    t = geometry.get("type")
+    if t == "LineString":
+        geometry["coordinates"] = simplify_line(geometry["coordinates"])
+    elif t == "MultiLineString":
+        geometry["coordinates"] = [simplify_line(line) for line in geometry["coordinates"]]
+    elif t == "Polygon":
+        geometry["coordinates"] = [simplify_line(ring) for ring in geometry["coordinates"]]
+    elif t == "MultiPolygon":
+        geometry["coordinates"] = [
+            [simplify_line(ring) for ring in poly] for poly in geometry["coordinates"]
+        ]
+    return geometry
+
+
 def geom_from_gml(elem):
     tag = local(elem.tag)
     if tag == "Point":
@@ -145,7 +206,9 @@ def gml_to_geojson(raw_bytes):
                 continue
             if len(child) == 0:  # élément simple porteur de texte, pas un conteneur
                 props[name] = child.text
-        features.append({"type": "Feature", "properties": props, "geometry": geometry})
+        features.append(
+            {"type": "Feature", "properties": props, "geometry": simplify_geometry(geometry)}
+        )
     return fix_axis_order({"type": "FeatureCollection", "features": features})
 
 
