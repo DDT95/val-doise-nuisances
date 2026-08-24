@@ -182,18 +182,34 @@ PAGE_SIZE = 300
 MAX_PAGES = 60  # garde-fou : jusqu'à 18 000 entités
 
 
+def fetch_page(base, type_name, count, start_index):
+    url = (
+        f"{base}&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature"
+        f"&TYPENAMES={urllib.parse.quote(type_name)}"
+        f"&SRSNAME=EPSG:4326&OUTPUTFORMAT={urllib.parse.quote(GML_OUTPUT_FORMAT)}"
+        f"&COUNT={count}&STARTINDEX={start_index}"
+    )
+    return fetch(url)
+
+
 def fetch_geojson(source):
     type_name = discover_type_name(source["capabilities"])
     all_features = []
     start_index = 0
+    page_size = PAGE_SIZE
     for page in range(MAX_PAGES):
-        url = (
-            f"{source['base']}&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature"
-            f"&TYPENAMES={urllib.parse.quote(type_name)}"
-            f"&SRSNAME=EPSG:4326&OUTPUTFORMAT={urllib.parse.quote(GML_OUTPUT_FORMAT)}"
-            f"&COUNT={PAGE_SIZE}&STARTINDEX={start_index}"
-        )
-        raw = fetch(url)
+        raw = fetch_page(source["base"], type_name, page_size, start_index)
+        if not raw.strip() and page == 0:
+            # Réponse vide dès la première page : une entité trop volumineuse
+            # (géométrie à très forte densité de points) peut faire échouer le
+            # rendu GML côté serveur même pour un lot réduit. On réessaie avec
+            # des lots de plus en plus petits avant d'abandonner.
+            for smaller in (50, 10, 1):
+                print(f"{type_name} : réponse vide avec COUNT={page_size}, nouvel essai avec COUNT={smaller}")
+                raw = fetch_page(source["base"], type_name, smaller, start_index)
+                if raw.strip():
+                    page_size = smaller
+                    break
         if not raw.strip():
             if page == 0:
                 raise RuntimeError(f"Réponse vide pour la couche {type_name}")
@@ -204,9 +220,9 @@ def fetch_geojson(source):
         page_features = gml_to_geojson(raw)["features"]
         all_features.extend(page_features)
         print(f"{type_name} : page {page} -> {len(page_features)} entités (total {len(all_features)})")
-        if len(page_features) < PAGE_SIZE:
+        if len(page_features) < page_size:
             break
-        start_index += PAGE_SIZE
+        start_index += page_size
     else:
         print(f"::warning::{type_name} : plafond de {MAX_PAGES} pages atteint, données potentiellement incomplètes")
     geojson = {"type": "FeatureCollection", "features": all_features}
