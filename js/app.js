@@ -218,25 +218,10 @@ function showRail(p) {
     `<span class="detail-tag">INFRASTRUCTURE FERROVIAIRE</span><h2>${esc(p.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>Référence</small><strong>${esc(p.ref || "—")}</strong></div><div class="kpi-tile warn"><small>Type</small><strong>Voie ferrée</strong></div></div><h3>Lecture</h3><p>Activez « Niveaux sonores ferroviaires » pour afficher les secteurs exposés à partir de 55 dB(A) Lden autour du réseau.</p>`,
   );
 }
-// --- Classement sonore routier (arrêté n°17-146) · flux WFS DDT 95 en direct ---
-const CS_ROUTE_WFS = {
-  lines: {
-    capabilities:
-      "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/8adeaaa4-6d6a-4f32-b53c-30b8a3eee9af.internet.map&SERVICE=WFS&REQUEST=GetCapabilities",
-    base: "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/8adeaaa4-6d6a-4f32-b53c-30b8a3eee9af.internet.map",
-  },
-  buffer: {
-    capabilities:
-      "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/5e133a97-f7ac-4c8b-91ad-eb81023cd863.internet.map&SERVICE=WFS&REQUEST=GetCapabilities",
-    base: "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/5e133a97-f7ac-4c8b-91ad-eb81023cd863.internet.map",
-  },
-};
-const WFS_VERSIONS = [
-  { version: "2.0.0", typeParam: "TYPENAMES" },
-  { version: "1.1.0", typeParam: "TYPENAME" },
-  { version: "1.0.0", typeParam: "TYPENAME" },
-];
-const WFS_OUTPUT_FORMATS = ["application/json", "geojson", "GEOJSON", "json"];
+// --- Classement sonore routier (arrêté n°17-146) ---
+// Les couches sont synchronisées côté serveur (GitHub Actions, voir
+// .github/workflows/sync-cs-route.yml) car le WFS de la DDT 95 ne renvoie
+// pas d'en-tête CORS et ne peut donc pas être appelé depuis le navigateur.
 function getProp(props, ...names) {
   const lower = {};
   for (const k in props) lower[k.toLowerCase()] = props[k];
@@ -245,56 +230,6 @@ function getProp(props, ...names) {
     if (v !== undefined && v !== null && v !== "") return v;
   }
   return undefined;
-}
-async function discoverWfsTypeName(capabilitiesUrl) {
-  const res = await fetch(capabilitiesUrl);
-  if (!res.ok) throw new Error("GetCapabilities HTTP " + res.status);
-  const xml = new DOMParser().parseFromString(
-    await res.text(),
-    "application/xml",
-  );
-  if (xml.querySelector("parsererror"))
-    throw new Error("Réponse GetCapabilities invalide");
-  const names = [...xml.getElementsByTagNameNS("*", "FeatureType")]
-    .map((ft) => ft.getElementsByTagNameNS("*", "Name")[0]?.textContent?.trim())
-    .filter(Boolean);
-  if (!names.length) throw new Error("Aucune couche WFS trouvée");
-  return names[0];
-}
-function firstCoord(geometry) {
-  if (!geometry) return null;
-  let c = geometry.coordinates;
-  while (Array.isArray(c) && Array.isArray(c[0])) c = c[0];
-  return Array.isArray(c) && typeof c[0] === "number" ? c : null;
-}
-function fixAxisOrder(geojson) {
-  const coord = firstCoord(geojson.features?.[0]?.geometry);
-  if (!coord || Math.abs(coord[0]) <= 45) return geojson;
-  const swap = (c) => (typeof c[0] === "number" ? [c[1], c[0]] : c.map(swap));
-  geojson.features.forEach((f) => {
-    if (f.geometry) f.geometry.coordinates = swap(f.geometry.coordinates);
-  });
-  return geojson;
-}
-async function fetchWfsGeoJSON(source) {
-  const typeName = await discoverWfsTypeName(source.capabilities);
-  for (const { version, typeParam } of WFS_VERSIONS) {
-    for (const outputFormat of WFS_OUTPUT_FORMATS) {
-      try {
-        const url =
-          `${source.base}&SERVICE=WFS&VERSION=${version}&REQUEST=GetFeature` +
-          `&${typeParam}=${encodeURIComponent(typeName)}` +
-          `&SRSNAME=EPSG:4326&OUTPUTFORMAT=${encodeURIComponent(outputFormat)}`;
-        const res = await fetch(url);
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (data && Array.isArray(data.features)) return fixAxisOrder(data);
-      } catch {
-        // on tente la combinaison suivante
-      }
-    }
-  }
-  throw new Error("Le service WFS n’a répondu dans aucun format JSON connu.");
 }
 function csCategoryColor(cat) {
   const n = Number(cat);
@@ -344,28 +279,34 @@ state.layers.csBuffer = L.geoJSON(null, {
   }),
 }).addTo(map);
 async function loadCsRoute() {
-  $("csLinesStatus").textContent = "Chargement du service WFS…";
-  $("csBufferStatus").textContent = "Chargement du service WFS…";
+  $("csLinesStatus").textContent = "Chargement…";
+  $("csBufferStatus").textContent = "Chargement…";
   const [linesResult, bufferResult] = await Promise.allSettled([
-    fetchWfsGeoJSON(CS_ROUTE_WFS.lines),
-    fetchWfsGeoJSON(CS_ROUTE_WFS.buffer),
+    fetch(`data/cs-lines.geojson?v=${Date.now()}`, { cache: "no-store" }).then(
+      (r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))),
+    ),
+    fetch(`data/cs-buffer.geojson?v=${Date.now()}`, {
+      cache: "no-store",
+    }).then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))),
   ]);
-  if (linesResult.status === "fulfilled") {
+  if (linesResult.status === "fulfilled" && linesResult.value.features.length) {
     state.data.csLines = linesResult.value;
     state.layers.csLines.addData(linesResult.value);
     $("csLinesStatus").textContent =
       `${linesResult.value.features.length} tronçons classés · arrêté n°17-146`;
   } else {
-    $("csLinesStatus").textContent = "Service indisponible pour l’instant";
-    console.warn("CS Route (lignes) indisponible :", linesResult.reason);
+    $("csLinesStatus").textContent = "Synchronisation en cours, réessayez plus tard";
+    if (linesResult.status === "rejected")
+      console.warn("CS Route (lignes) indisponible :", linesResult.reason);
   }
-  if (bufferResult.status === "fulfilled") {
+  if (bufferResult.status === "fulfilled" && bufferResult.value.features.length) {
     state.data.csBuffer = bufferResult.value;
     state.layers.csBuffer.addData(bufferResult.value);
     $("csBufferStatus").textContent = "Empreinte réglementaire chargée";
   } else {
-    $("csBufferStatus").textContent = "Service indisponible pour l’instant";
-    console.warn("CS Route (empreinte) indisponible :", bufferResult.reason);
+    $("csBufferStatus").textContent = "Synchronisation en cours, réessayez plus tard";
+    if (bufferResult.status === "rejected")
+      console.warn("CS Route (empreinte) indisponible :", bufferResult.reason);
   }
 }
 loadCsRoute();

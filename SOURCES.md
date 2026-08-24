@@ -16,12 +16,17 @@ Les couches sont rasterisées à 100 mètres pour la consultation web. La valeur
 - Producteur et diffuseur : DDT du Val-d'Oise.
 - Licence : Licence Ouverte 2.0.
 
-Ces deux couches sont interrogées en direct via les flux WFS publiés par la
-DDT 95 (aucune copie locale n'est conservée dans ce dépôt) : le navigateur de
-chaque visiteur appelle `GetCapabilities` pour découvrir le nom technique de
-la couche, puis `GetFeature` en sortie GeoJSON. Si ce service de l'État est
-temporairement indisponible ou change de nom de couche, le site l'indique au
-lieu d'afficher une donnée périmée ou inventée.
+Ces deux couches sont synchronisées une fois par jour par une action GitHub
+(`.github/workflows/sync-cs-route.yml`, script `scripts/sync-cs-route.py`),
+sur le même principe que les flux Sytadin/ADS-B/Airparif de ce dépôt : le
+serveur appelle `GetCapabilities` pour découvrir le nom technique de chaque
+couche puis `GetFeature` en sortie GeoJSON, et le résultat est commité dans
+`data/cs-lines.geojson` et `data/cs-buffer.geojson`. Cet appel ne peut pas se
+faire directement depuis le navigateur des visiteurs : le WFS de la DDT 95 ne
+renvoie pas d'en-tête CORS (`Access-Control-Allow-Origin`), une tentative
+d'appel client a échoué en pratique avant ce choix d'architecture. Si la
+synchronisation échoue, le site l'indique au lieu d'afficher une donnée
+périmée ou inventée.
 
 Le widget « Vérifier un logement » géocode l'adresse saisie via l'API Adresse
 nationale (https://api-adresse.data.gouv.fr/, sans clé, licence ouverte), puis

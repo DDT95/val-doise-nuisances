@@ -16,7 +16,6 @@
     />
     <link rel="stylesheet" href="css/style.css?v=3" />
     <link rel="preconnect" href="https://api-adresse.data.gouv.fr" />
-    <link rel="preconnect" href="https://ogc.geo-ide.developpement-durable.gouv.fr" />
   </head>
   <body>
     <header class="topbar">
@@ -283,16 +282,18 @@
         <h3>Classement sonore routier</h3>
         <p>
           DDT 95, classement sonore des infrastructures routières et son
-          empreinte sonore (arrêté préfectoral n°17-146), interrogés en direct
-          via les flux WFS publiés sur data.gouv.fr — aucune copie locale.
-          Catégorie 1 = secteur affecté de 300 m (le plus sévère), catégorie 5
-          = 10 m. La vérification « au logement » compare le point choisi à la
-          distance réglementaire (« es ») de chaque tronçon classé, sans la
-          demi-largeur de chaussée : c’est une lecture indicative, pas un
-          certificat d’exposition. Le bruit ferroviaire et aérien n’y figurent
-          pas. Si le service WFS de l’État est temporairement indisponible,
-          les couches et la vérification l’indiquent au lieu d’afficher une
-          valeur inventée.
+          empreinte sonore (arrêté préfectoral n°17-146). Les flux WFS publiés
+          sur data.gouv.fr sont resynchronisés une fois par jour par une
+          action GitHub et publiés en GeoJSON dans ce dépôt — un appel direct
+          depuis le navigateur n’est pas possible, ce service de l’État ne
+          renvoyant pas d’en-tête CORS. Catégorie 1 = secteur affecté de 300 m
+          (le plus sévère), catégorie 5 = 10 m. La vérification « au logement
+          » compare le point choisi à la distance réglementaire (« es ») de
+          chaque tronçon classé, sans la demi-largeur de chaussée : c’est une
+          lecture indicative, pas un certificat d’exposition. Le bruit
+          ferroviaire et aérien n’y figurent pas. Si la synchronisation
+          échoue, les couches et la vérification l’indiquent au lieu
+          d’afficher une valeur inventée ou périmée.
         </p>
         <h3>Bruit ferroviaire</h3>
         <p>
