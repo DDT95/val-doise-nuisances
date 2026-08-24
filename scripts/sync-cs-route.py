@@ -4,12 +4,15 @@ depuis les flux WFS publiés par la DDT du Val-d'Oise sur data.gouv.fr.
 
 Exécuté côté serveur (GitHub Actions) car ces services WFS ne renvoient pas
 d'en-tête CORS et ne peuvent donc pas être appelés depuis un navigateur.
+
+Le service ne sait produire que du GML (aucun outputFormat JSON déclaré dans
+GetCapabilities, confirmé par des tentatives réelles renvoyant des erreurs
+400/corps vides) : on demande donc du GML 3.2 (WFS 2.0.0) et on le convertit
+nous-mêmes en GeoJSON.
 """
 import json
 import os
-import re
 import sys
-import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -25,12 +28,17 @@ SOURCES = {
     },
 }
 
-WFS_VERSIONS = [
-    ("2.0.0", "TYPENAMES"),
-    ("1.1.0", "TYPENAME"),
-    ("1.0.0", "TYPENAME"),
-]
-OUTPUT_FORMATS = ["application/json", "geojson", "GEOJSON", "json"]
+GML_OUTPUT_FORMAT = "application/gml+xml; version=3.2"
+GEOM_TAGS = {
+    "Point",
+    "LineString",
+    "Curve",
+    "MultiCurve",
+    "Polygon",
+    "Surface",
+    "MultiSurface",
+    "MultiPoint",
+}
 
 
 def fetch(url, timeout=90):
@@ -39,95 +47,115 @@ def fetch(url, timeout=90):
         return res.read()
 
 
+def local(tag):
+    return tag.rsplit("}", 1)[-1]
+
+
 def discover_type_name(capabilities_url):
-    raw = fetch(capabilities_url)
-    root = ET.fromstring(raw)
-    type_name = None
+    root = ET.fromstring(fetch(capabilities_url))
     for elem in root.iter():
-        if elem.tag.rsplit("}", 1)[-1] == "FeatureType":
+        if local(elem.tag) == "FeatureType":
             for child in elem:
-                if child.tag.rsplit("}", 1)[-1] == "Name" and child.text:
-                    type_name = child.text.strip()
-                    break
-        if type_name:
-            break
-    formats = sorted(set(re.findall(rb'outputFormat"[^>]*>\s*<[^>]*>([^<]+)<', raw, re.I)))
-    print(f"outputFormat déclarés (parsing strict) : {[f.decode() for f in formats]}")
-    for i, m in enumerate(re.finditer(rb"outputFormat", raw, re.I)):
-        if i >= 6:
-            break
-        start = max(0, m.start() - 20)
-        print(f"contexte outputFormat #{i} : {raw[start:m.start()+200]!r}")
-    if not type_name:
-        raise RuntimeError("Aucune couche trouvée dans GetCapabilities : " + capabilities_url)
-    return type_name
+                if local(child.tag) == "Name" and child.text:
+                    return child.text.strip()
+    raise RuntimeError("Aucune couche trouvée dans GetCapabilities : " + capabilities_url)
 
 
-def first_coord(geometry):
-    if not geometry:
-        return None
-    c = geometry.get("coordinates")
-    while isinstance(c, list) and c and isinstance(c[0], list):
-        c = c[0]
-    if isinstance(c, list) and c and isinstance(c[0], (int, float)):
-        return c
+def parse_coord_list(elem):
+    """gml:posList (une suite plate de coordonnées) -> liste de [x, y]."""
+    dim = int(elem.get("srsDimension", "2"))
+    nums = [float(x) for x in (elem.text or "").split()]
+    return [nums[i : i + dim][:2] for i in range(0, len(nums), dim)]
+
+
+def parse_pos(elem):
+    """gml:pos (un seul point) -> [x, y]."""
+    nums = [float(x) for x in (elem.text or "").split()]
+    return nums[:2]
+
+
+def geom_from_gml(elem):
+    tag = local(elem.tag)
+    if tag == "Point":
+        pos = elem.find("{*}pos")
+        return {"type": "Point", "coordinates": parse_pos(pos)} if pos is not None else None
+    if tag in ("LineString", "Curve"):
+        pos_list = elem.find(".//{*}posList")
+        if pos_list is None:
+            return None
+        return {"type": "LineString", "coordinates": parse_coord_list(pos_list)}
+    if tag == "MultiCurve":
+        lines = []
+        for member in elem.findall(".//{*}curveMember"):
+            for child in member:
+                g = geom_from_gml(child)
+                if g:
+                    lines.append(g["coordinates"])
+        return {"type": "MultiLineString", "coordinates": lines} if lines else None
+    if tag in ("Polygon", "Surface"):
+        rings = []
+        exterior = elem.find(".//{*}exterior")
+        if exterior is not None:
+            pos_list = exterior.find(".//{*}posList")
+            if pos_list is not None:
+                rings.append(parse_coord_list(pos_list))
+        for interior in elem.findall(".//{*}interior"):
+            pos_list = interior.find(".//{*}posList")
+            if pos_list is not None:
+                rings.append(parse_coord_list(pos_list))
+        return {"type": "Polygon", "coordinates": rings} if rings else None
+    if tag == "MultiSurface":
+        polys = []
+        for member in elem.findall(".//{*}surfaceMember"):
+            for child in member:
+                g = geom_from_gml(child)
+                if g and g["type"] == "Polygon":
+                    polys.append(g["coordinates"])
+        return {"type": "MultiPolygon", "coordinates": polys} if polys else None
     return None
 
 
-def swap_coords(c):
-    if isinstance(c[0], (int, float)):
-        return [c[1], c[0]]
-    return [swap_coords(x) for x in c]
-
-
-def fix_axis_order(geojson):
-    features = geojson.get("features") or []
-    if not features:
-        return geojson
-    coord = first_coord(features[0].get("geometry"))
-    if not coord or abs(coord[0]) <= 45:
-        return geojson
-    for f in features:
-        geom = f.get("geometry")
-        if geom and geom.get("coordinates") is not None:
-            geom["coordinates"] = swap_coords(geom["coordinates"])
-    return geojson
-
-
-def fetch_geojson(source, verbose=False):
-    type_name = discover_type_name(source["capabilities"])
-    last_error = None
-    for version, type_param in WFS_VERSIONS:
-        for output_format in OUTPUT_FORMATS:
-            url = (
-                f"{source['base']}&SERVICE=WFS&VERSION={version}&REQUEST=GetFeature"
-                f"&{type_param}={urllib.parse.quote(type_name)}"
-                f"&SRSNAME=EPSG:4326&OUTPUTFORMAT={urllib.parse.quote(output_format)}"
+def gml_to_geojson(raw_bytes):
+    root = ET.fromstring(raw_bytes)
+    features = []
+    for member in root.iter():
+        if local(member.tag) not in ("member", "featureMember"):
+            continue
+        feat_elems = list(member)
+        if not feat_elems:
+            continue
+        feat_elem = feat_elems[0]
+        props, geometry = {}, None
+        for child in feat_elem:
+            geom_elem = child if local(child.tag) in GEOM_TAGS else next(
+                (d for d in child.iter() if local(d.tag) in GEOM_TAGS), None
             )
-            try:
-                raw = fetch(url)
-                data = json.loads(raw)
-                if isinstance(data.get("features"), list):
-                    return fix_axis_order(data), type_name
-                if verbose:
-                    print(f"{version}/{output_format} : réponse JSON sans 'features' -> {raw[:200]!r}")
-                last_error = f"{version}/{output_format} : pas de 'features' dans la réponse"
-            except urllib.error.HTTPError as exc:
-                body = exc.read()[:1500]
-                print(f"{version}/{output_format} : HTTP {exc.code} -> {body!r}")
-                last_error = f"{version}/{output_format} : HTTP {exc.code}"
-            except Exception as exc:  # on tente la combinaison suivante
-                if verbose:
-                    print(f"{version}/{output_format} : {type(exc).__name__} {exc}")
-                last_error = f"{version}/{output_format} : {exc}"
-    raise RuntimeError(f"Aucun format accepté pour la couche {type_name} ({last_error})")
+            if geom_elem is not None:
+                geometry = geometry or geom_from_gml(geom_elem)
+                continue
+            props[local(child.tag)] = child.text
+        features.append({"type": "Feature", "properties": props, "geometry": geometry})
+    return {"type": "FeatureCollection", "features": features}
+
+
+def fetch_geojson(source):
+    type_name = discover_type_name(source["capabilities"])
+    url = (
+        f"{source['base']}&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature"
+        f"&TYPENAMES={urllib.parse.quote(type_name)}"
+        f"&SRSNAME=EPSG:4326&OUTPUTFORMAT={urllib.parse.quote(GML_OUTPUT_FORMAT)}"
+    )
+    geojson = gml_to_geojson(fetch(url))
+    if not geojson["features"]:
+        raise RuntimeError(f"Aucune entité renvoyée pour la couche {type_name}")
+    return geojson, type_name
 
 
 def main():
     changed = False
     for path, source in SOURCES.items():
         try:
-            geojson, type_name = fetch_geojson(source, verbose=True)
+            geojson, type_name = fetch_geojson(source)
         except Exception as exc:
             print(f"::warning::{path} non synchronisé : {exc}", file=sys.stderr)
             continue
