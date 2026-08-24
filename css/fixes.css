@@ -349,3 +349,72 @@
 .sources-inline {
   margin: 0 14px 8px;
 }
+.dwelling-check {
+  margin: 0 18px 14px;
+  padding: 14px 16px;
+  border: 1px solid #ccd5df;
+  border-radius: 14px;
+  background: #f7f9fb;
+}
+.dwelling-check h2 {
+  margin: 6px 0 4px;
+  font-size: 16px;
+}
+.dwelling-check > p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.dwelling-box {
+  padding: 0;
+}
+.dwelling-box > span {
+  margin-top: 0;
+}
+.pick-button {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 9px;
+  border: 1px solid var(--blue);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--blue);
+  font-size: 11px;
+}
+.pick-button.active {
+  background: var(--blue);
+  color: #fff;
+}
+.dwelling-result:not(:empty) {
+  margin-top: 10px;
+}
+.dwelling-result h3 {
+  margin: 6px 0;
+  font-size: 15px;
+}
+.dwelling-result .kpi-grid {
+  margin-top: 8px;
+}
+.cs-line {
+  background: linear-gradient(135deg, #ffe05b, #691635);
+}
+.cs-buffer {
+  background: #8a97a8;
+  opacity: 0.55;
+}
+.cs-line-swatch {
+  display: inline-block;
+  width: 28px;
+  height: 4px;
+  background: linear-gradient(90deg, #ffe05b, #691635);
+}
+.cs-buffer-swatch {
+  display: inline-block;
+  width: 28px;
+  height: 10px;
+  border-radius: 3px;
+  background: #8a97a8;
+  opacity: 0.55;
+}

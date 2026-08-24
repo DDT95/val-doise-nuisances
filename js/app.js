@@ -218,6 +218,287 @@ function showRail(p) {
     `<span class="detail-tag">INFRASTRUCTURE FERROVIAIRE</span><h2>${esc(p.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>Référence</small><strong>${esc(p.ref || "—")}</strong></div><div class="kpi-tile warn"><small>Type</small><strong>Voie ferrée</strong></div></div><h3>Lecture</h3><p>Activez « Niveaux sonores ferroviaires » pour afficher les secteurs exposés à partir de 55 dB(A) Lden autour du réseau.</p>`,
   );
 }
+// --- Classement sonore routier (arrêté n°17-146) · flux WFS DDT 95 en direct ---
+const CS_ROUTE_WFS = {
+  lines: {
+    capabilities:
+      "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/8adeaaa4-6d6a-4f32-b53c-30b8a3eee9af.internet.map&SERVICE=WFS&REQUEST=GetCapabilities",
+    base: "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/8adeaaa4-6d6a-4f32-b53c-30b8a3eee9af.internet.map",
+  },
+  buffer: {
+    capabilities:
+      "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/5e133a97-f7ac-4c8b-91ad-eb81023cd863.internet.map&SERVICE=WFS&REQUEST=GetCapabilities",
+    base: "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/5e133a97-f7ac-4c8b-91ad-eb81023cd863.internet.map",
+  },
+};
+const WFS_VERSIONS = [
+  { version: "2.0.0", typeParam: "TYPENAMES" },
+  { version: "1.1.0", typeParam: "TYPENAME" },
+  { version: "1.0.0", typeParam: "TYPENAME" },
+];
+const WFS_OUTPUT_FORMATS = ["application/json", "geojson", "GEOJSON", "json"];
+function getProp(props, ...names) {
+  const lower = {};
+  for (const k in props) lower[k.toLowerCase()] = props[k];
+  for (const n of names) {
+    const v = lower[n.toLowerCase()];
+    if (v !== undefined && v !== null && v !== "") return v;
+  }
+  return undefined;
+}
+async function discoverWfsTypeName(capabilitiesUrl) {
+  const res = await fetch(capabilitiesUrl);
+  if (!res.ok) throw new Error("GetCapabilities HTTP " + res.status);
+  const xml = new DOMParser().parseFromString(
+    await res.text(),
+    "application/xml",
+  );
+  if (xml.querySelector("parsererror"))
+    throw new Error("Réponse GetCapabilities invalide");
+  const names = [...xml.getElementsByTagNameNS("*", "FeatureType")]
+    .map((ft) => ft.getElementsByTagNameNS("*", "Name")[0]?.textContent?.trim())
+    .filter(Boolean);
+  if (!names.length) throw new Error("Aucune couche WFS trouvée");
+  return names[0];
+}
+function firstCoord(geometry) {
+  if (!geometry) return null;
+  let c = geometry.coordinates;
+  while (Array.isArray(c) && Array.isArray(c[0])) c = c[0];
+  return Array.isArray(c) && typeof c[0] === "number" ? c : null;
+}
+function fixAxisOrder(geojson) {
+  const coord = firstCoord(geojson.features?.[0]?.geometry);
+  if (!coord || Math.abs(coord[0]) <= 45) return geojson;
+  const swap = (c) => (typeof c[0] === "number" ? [c[1], c[0]] : c.map(swap));
+  geojson.features.forEach((f) => {
+    if (f.geometry) f.geometry.coordinates = swap(f.geometry.coordinates);
+  });
+  return geojson;
+}
+async function fetchWfsGeoJSON(source) {
+  const typeName = await discoverWfsTypeName(source.capabilities);
+  for (const { version, typeParam } of WFS_VERSIONS) {
+    for (const outputFormat of WFS_OUTPUT_FORMATS) {
+      try {
+        const url =
+          `${source.base}&SERVICE=WFS&VERSION=${version}&REQUEST=GetFeature` +
+          `&${typeParam}=${encodeURIComponent(typeName)}` +
+          `&SRSNAME=EPSG:4326&OUTPUTFORMAT=${encodeURIComponent(outputFormat)}`;
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data && Array.isArray(data.features)) return fixAxisOrder(data);
+      } catch {
+        // on tente la combinaison suivante
+      }
+    }
+  }
+  throw new Error("Le service WFS n’a répondu dans aucun format JSON connu.");
+}
+function csCategoryColor(cat) {
+  const n = Number(cat);
+  return n === 1
+    ? "#691635"
+    : n === 2
+      ? "#ab202f"
+      : n === 3
+        ? "#e05b31"
+        : n === 4
+          ? "#f5a623"
+          : n === 5
+            ? "#ffe05b"
+            : "#8a97a8";
+}
+function showCsRoute(props) {
+  const name = esc(getProp(props, "name", "nom") ?? "Tronçon sans nom");
+  const cat = esc(getProp(props, "categorie", "categ") ?? "—");
+  const es = getProp(props, "es");
+  const communes = getProp(props, "insee_com", "communes");
+  openDetail(
+    `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h2>${name}</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Catégorie</small><strong>${cat}</strong></div><div class="kpi-tile"><small>Secteur affecté</small><strong>${es ? esc(es) + " m" : "—"}</strong></div></div>${communes ? `<p><strong>Communes concernées :</strong> ${esc(Array.isArray(communes) ? communes.join(", ") : communes)}</p>` : ""}<p class="flag-note">Classement issu de l’arrêté préfectoral n°17-146. Catégorie 1 = la plus sévère (secteur de 300 m), catégorie 5 = la moins sévère (10 m).</p>`,
+  );
+}
+state.layers.csLines = L.geoJSON(null, {
+  pane: "network",
+  style: (f) => ({
+    color: csCategoryColor(getProp(f.properties, "categorie")),
+    weight: 3,
+    opacity: 0.9,
+  }),
+  onEachFeature: (f, l) =>
+    l
+      .bindTooltip(
+        `<strong>${esc(getProp(f.properties, "name", "nom") ?? "Tronçon")}</strong> · catégorie ${esc(getProp(f.properties, "categorie") ?? "—")}`,
+        { sticky: true },
+      )
+      .on("click", () => showCsRoute(f.properties)),
+});
+state.layers.csBuffer = L.geoJSON(null, {
+  pane: "noise",
+  style: () => ({
+    color: "#8a97a8",
+    weight: 1,
+    fillColor: "#8a97a8",
+    fillOpacity: 0.28,
+  }),
+});
+async function loadCsRoute() {
+  $("csLinesStatus").textContent = "Chargement du service WFS…";
+  $("csBufferStatus").textContent = "Chargement du service WFS…";
+  const [linesResult, bufferResult] = await Promise.allSettled([
+    fetchWfsGeoJSON(CS_ROUTE_WFS.lines),
+    fetchWfsGeoJSON(CS_ROUTE_WFS.buffer),
+  ]);
+  if (linesResult.status === "fulfilled") {
+    state.data.csLines = linesResult.value;
+    state.layers.csLines.addData(linesResult.value);
+    $("csLinesStatus").textContent =
+      `${linesResult.value.features.length} tronçons classés · arrêté n°17-146`;
+  } else {
+    $("csLinesStatus").textContent = "Service indisponible pour l’instant";
+    console.warn("CS Route (lignes) indisponible :", linesResult.reason);
+  }
+  if (bufferResult.status === "fulfilled") {
+    state.data.csBuffer = bufferResult.value;
+    state.layers.csBuffer.addData(bufferResult.value);
+    $("csBufferStatus").textContent = "Empreinte réglementaire chargée";
+  } else {
+    $("csBufferStatus").textContent = "Service indisponible pour l’instant";
+    console.warn("CS Route (empreinte) indisponible :", bufferResult.reason);
+  }
+}
+loadCsRoute();
+// --- Vérifier un logement : géocodage BAN + distance au tronçon classé le plus proche ---
+function renderDwellingResult(html) {
+  $("dwellingResult").innerHTML = html;
+}
+function distPointToSegment(px, py, ax, ay, bx, by) {
+  const dx = bx - ax,
+    dy = by - ay,
+    len2 = dx * dx + dy * dy;
+  let t = len2 ? ((px - ax) * dx + (py - ay) * dy) / len2 : 0;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+function toMeters(lon, lat, lat0) {
+  const rad = Math.PI / 180,
+    R = 6371000;
+  return [lon * rad * R * Math.cos(lat0 * rad), lat * rad * R];
+}
+function distToLineFeature(lon, lat, geometry) {
+  const [px, py] = toMeters(lon, lat, lat);
+  const lines =
+    geometry.type === "MultiLineString"
+      ? geometry.coordinates
+      : [geometry.coordinates];
+  let min = Infinity;
+  for (const line of lines)
+    for (let i = 0; i < line.length - 1; i++) {
+      const [ax, ay] = toMeters(line[i][0], line[i][1], lat);
+      const [bx, by] = toMeters(line[i + 1][0], line[i + 1][1], lat);
+      min = Math.min(min, distPointToSegment(px, py, ax, ay, bx, by));
+    }
+  return min;
+}
+function checkDwelling(lon, lat, label) {
+  if (state.layers.dwellingMarker) map.removeLayer(state.layers.dwellingMarker);
+  state.layers.dwellingMarker = L.marker([lat, lon]).addTo(map);
+  if (label) state.layers.dwellingMarker.bindPopup(esc(label)).openPopup();
+  map.setView([lat, lon], 16);
+  const lines = state.data.csLines;
+  if (!lines) {
+    renderDwellingResult(
+      `<p class="flag-note">Le service de classement sonore n’a pas pu être chargé. Réessayez dans quelques instants, ou consultez directement l’arrêté préfectoral n°17-146.</p>`,
+    );
+    return;
+  }
+  const matches = [];
+  for (const f of lines.features) {
+    const es = Number(getProp(f.properties, "es"));
+    if (!es || !f.geometry) continue;
+    if (distToLineFeature(lon, lat, f.geometry) <= es)
+      matches.push({
+        props: f.properties,
+        cat: Number(getProp(f.properties, "categorie")) || 9,
+      });
+  }
+  if (!matches.length) {
+    renderDwellingResult(
+      `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h3>Hors secteur classé</h3><p>Aucun tronçon classé ne place ce point dans un secteur affecté par le bruit routier, d’après l’arrêté n°17-146.</p><p class="flag-note">Vérification indicative : géométrie officielle simplifiée, sans la demi-largeur de chaussée. Le bruit ferroviaire ou aérien n’est pas couvert ici.</p>`,
+    );
+    return;
+  }
+  matches.sort((a, b) => a.cat - b.cat);
+  renderDwellingResult(
+    `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h3>Dans un secteur affecté</h3><div class="kpi-grid">${matches
+      .slice(0, 4)
+      .map(
+        (m) =>
+          `<div class="kpi-tile warn"><small>${esc(getProp(m.props, "name", "nom") ?? "Tronçon")}</small><strong>Catégorie ${esc(getProp(m.props, "categorie") ?? "—")}</strong><em>Secteur ${esc(getProp(m.props, "es") ?? "—")} m</em></div>`,
+      )
+      .join(
+        "",
+      )}</div><p class="flag-note">Vérification indicative à partir de la géométrie officielle (arrêté n°17-146), sans la demi-largeur de chaussée. En cas de doute (isolement acoustique, permis de construire…), consultez le service instructeur de la DDT 95.</p>`,
+  );
+}
+let dwellingHits = [],
+  dwellingTimer,
+  pickMode = false;
+async function geocodeAddress(q) {
+  const res = await fetch(
+    `https://api-adresse.data.gouv.fr/search/?limit=5&lat=49.08&lon=2.10&q=${encodeURIComponent(q)}`,
+  );
+  if (!res.ok) throw new Error("Géocodage indisponible");
+  return (await res.json()).features || [];
+}
+$("dwellingInput").oninput = () => {
+  clearTimeout(dwellingTimer);
+  const q = $("dwellingInput").value.trim();
+  if (q.length < 4) {
+    $("dwellingResults").hidden = true;
+    return;
+  }
+  dwellingTimer = setTimeout(async () => {
+    try {
+      dwellingHits = await geocodeAddress(q);
+      $("dwellingResults").innerHTML = dwellingHits
+        .map((f, i) => `<button data-i="${i}">${esc(f.properties.label)}</button>`)
+        .join("");
+      $("dwellingResults").hidden = !dwellingHits.length;
+      $("dwellingResults")
+        .querySelectorAll("button")
+        .forEach(
+          (b) =>
+            (b.onclick = () => {
+              const f = dwellingHits[Number(b.dataset.i)];
+              const [lon, lat] = f.geometry.coordinates;
+              $("dwellingInput").value = f.properties.label;
+              $("dwellingResults").hidden = true;
+              checkDwelling(lon, lat, f.properties.label);
+            }),
+        );
+    } catch {
+      $("dwellingResults").hidden = true;
+    }
+  }, 300);
+};
+$("dwellingPick").onclick = () => {
+  pickMode = !pickMode;
+  $("dwellingPick").classList.toggle("active", pickMode);
+  $("dwellingPick").textContent = pickMode
+    ? "Cliquez sur la carte…"
+    : "Cliquer un point sur la carte";
+  map.getContainer().style.cursor = pickMode ? "crosshair" : "";
+};
+map.on("click", (e) => {
+  if (!pickMode) return;
+  pickMode = false;
+  $("dwellingPick").classList.remove("active");
+  $("dwellingPick").textContent = "Cliquer un point sur la carte";
+  map.getContainer().style.cursor = "";
+  checkDwelling(e.latlng.lng, e.latlng.lat, null);
+});
 function showCommune(code) {
   const s = state.stats[code];
   if (!s) return;
@@ -557,6 +838,14 @@ function updateLegend() {
   if (state.active.has("railNoise"))
     parts.push(
       '<span><i class="noise-ramp"></i>Bruit ferroviaire · Lden 55–75 dB(A)</span>',
+    );
+  if (state.active.has("csLines"))
+    parts.push(
+      '<span><i class="cs-line-swatch"></i>Tronçons classés (1 à 5)</span>',
+    );
+  if (state.active.has("csBuffer"))
+    parts.push(
+      '<span><i class="cs-buffer-swatch"></i>Secteurs affectés par le bruit</span>',
     );
   if (state.active.has("roads"))
     parts.push('<span><i class="road-line"></i>Axes routiers</span>');

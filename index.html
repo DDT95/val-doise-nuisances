@@ -15,6 +15,8 @@
       crossorigin=""
     />
     <link rel="stylesheet" href="css/style.css?v=3" />
+    <link rel="preconnect" href="https://api-adresse.data.gouv.fr" />
+    <link rel="preconnect" href="https://ogc.geo-ide.developpement-durable.gouv.fr" />
   </head>
   <body>
     <header class="topbar">
@@ -68,6 +70,30 @@
           <button id="resetView">Recentrer</button
           ><button id="openData">Données & évolutions</button>
         </div>
+        <div class="dwelling-check">
+          <span class="eyebrow">CLASSEMENT SONORE ROUTIER</span>
+          <h2>Vérifier un logement</h2>
+          <p>
+            Ce logement est-il dans un secteur affecté par le bruit routier ?
+            Arrêté préfectoral n°17-146.
+          </p>
+          <label class="search-box dwelling-box"
+            ><span>Adresse</span>
+            <div>
+              <input
+                id="dwellingInput"
+                type="search"
+                placeholder="Ex. 12 rue de la Gare, Pontoise"
+                autocomplete="off"
+              />
+            </div>
+          </label>
+          <div id="dwellingResults" class="search-results" hidden></div>
+          <button id="dwellingPick" type="button" class="pick-button">
+            Cliquer un point sur la carte
+          </button>
+          <div id="dwellingResult" class="dwelling-result"></div>
+        </div>
         <div class="layers-scroll" aria-label="Couches cartographiques">
           <section class="layers-panel">
             <div class="section-head">
@@ -97,6 +123,28 @@
                   ><span
                     ><b>Axes routiers principaux</b
                     ><small>A1 · A15 · A115 · A104 · N184 · RD</small></span
+                  ><i class="layer-switch"></i>
+                </button>
+              </div>
+            </div>
+            <div class="layer-group">
+              <span>CLASSEMENT SONORE ROUTIER (RÉGLEMENTAIRE)</span>
+              <div class="layer-cards">
+                <button class="layer-card" data-layer="csLines">
+                  <i class="layer-swatch cs-line"></i
+                  ><span
+                    ><b>Tronçons classés</b
+                    ><small id="csLinesStatus"
+                      >Catégories 1 à 5 · arrêté n°17-146</small
+                    ></span
+                  ><i class="layer-switch"></i></button
+                ><button class="layer-card" data-layer="csBuffer">
+                  <i class="layer-swatch cs-buffer"></i
+                  ><span
+                    ><b>Secteurs affectés par le bruit</b
+                    ><small id="csBufferStatus"
+                      >Empreinte réglementaire</small
+                    ></span
                   ><i class="layer-switch"></i>
                 </button>
               </div>
@@ -232,6 +280,20 @@
           nocturne Ln, 2017. Classes de 40 à 75 dB(A). Les axes sont nommés avec
           OpenStreetMap.
         </p>
+        <h3>Classement sonore routier</h3>
+        <p>
+          DDT 95, classement sonore des infrastructures routières et son
+          empreinte sonore (arrêté préfectoral n°17-146), interrogés en direct
+          via les flux WFS publiés sur data.gouv.fr — aucune copie locale.
+          Catégorie 1 = secteur affecté de 300 m (le plus sévère), catégorie 5
+          = 10 m. La vérification « au logement » compare le point choisi à la
+          distance réglementaire (« es ») de chaque tronçon classé, sans la
+          demi-largeur de chaussée : c’est une lecture indicative, pas un
+          certificat d’exposition. Le bruit ferroviaire et aérien n’y figurent
+          pas. Si le service WFS de l’État est temporairement indisponible,
+          les couches et la vérification l’indiquent au lieu d’afficher une
+          valeur inventée.
+        </p>
         <h3>Bruit ferroviaire</h3>
         <p>
           DDT 95, grandes infrastructures SNCF, carte de type A, Lden, 2017.
@@ -280,11 +342,11 @@
         </div>
       </div>
     </dialog>
-    <link rel="stylesheet" href="css/fixes.css?v=1" />
+    <link rel="stylesheet" href="css/fixes.css?v=2" />
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="js/app.js?v=4"></script>
+    <script src="js/app.js?v=5"></script>
   </body>
 </html>

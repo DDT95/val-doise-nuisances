@@ -9,6 +9,31 @@
 
 Les couches sont rasterisées à 100 mètres pour la consultation web. La valeur de classe reste interrogeable sur la carte. Les routes principales et voies ferrées nommées proviennent d’OpenStreetMap, extraction du 16 août 2026, ODbL.
 
+## Classement sonore routier (arrêté préfectoral n°17-146)
+
+- Tronçons classés : https://www.data.gouv.fr/datasets/classement-sonore-des-infrastructures-routieres-3
+- Empreinte sonore (secteurs affectés par le bruit) : https://www.data.gouv.fr/datasets/empreinte-sonore-du-classement-des-infrastructures-routieres
+- Producteur et diffuseur : DDT du Val-d'Oise.
+- Licence : Licence Ouverte 2.0.
+
+Ces deux couches sont interrogées en direct via les flux WFS publiés par la
+DDT 95 (aucune copie locale n'est conservée dans ce dépôt) : le navigateur de
+chaque visiteur appelle `GetCapabilities` pour découvrir le nom technique de
+la couche, puis `GetFeature` en sortie GeoJSON. Si ce service de l'État est
+temporairement indisponible ou change de nom de couche, le site l'indique au
+lieu d'afficher une donnée périmée ou inventée.
+
+Le widget « Vérifier un logement » géocode l'adresse saisie via l'API Adresse
+nationale (https://api-adresse.data.gouv.fr/, sans clé, licence ouverte), puis
+calcule la distance du point à chaque tronçon classé et la compare à la
+largeur réglementaire du secteur affecté (colonne « es », identique à la
+colonne « Secteur (m) » de l'annexe 3 de l'arrêté). C'est une lecture
+indicative : elle ignore la demi-largeur de la chaussée (quelques mètres,
+prévue par la méthodologie DDT 95 mais non reconstituable depuis les couches
+publiées) et ne couvre pas le bruit ferroviaire ni aérien. Pour toute
+démarche réglementaire (isolement acoustique, permis de construire),
+consulter l'arrêté n°17-146 et le service instructeur de la DDT 95.
+
 ## Circulation routière directe
 
 - Service officiel francilien : https://www.sytadin.fr/
