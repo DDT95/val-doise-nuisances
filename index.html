@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       name="description"
-      content="Bruit, air et trafic dans le Val-d’Oise"
+      content="Vérifiez si un logement est dans un secteur affecté par le bruit routier (arrêté n°17-146), puis explorez les autres nuisances du Val-d’Oise."
     />
-    <title>Nuisances · Val-d’Oise · DDT 95</title>
+    <title>Classement sonore routier · Nuisances Val-d’Oise · DDT 95</title>
     <link rel="preconnect" href="https://tile.openstreetmap.org" />
     <link
       rel="stylesheet"
@@ -15,6 +15,8 @@
       crossorigin=""
     />
     <link rel="stylesheet" href="css/style.css?v=3" />
+    <link rel="preconnect" href="https://api-adresse.data.gouv.fr" />
+    <link rel="preconnect" href="https://ogc.geo-ide.developpement-durable.gouv.fr" />
   </head>
   <body>
     <header class="topbar">
@@ -27,11 +29,11 @@
           alt="Préfet du Val-d’Oise"
       /></a>
       <div class="title-block">
-        <span class="eyebrow">ENVIRONNEMENT · TRANSPORTS · VAL-D’OISE</span>
-        <h1>Quelles nuisances affectent le territoire ?</h1>
+        <span class="eyebrow">CLASSEMENT SONORE ROUTIER · ARRÊTÉ N°17-146</span>
+        <h1>Mon logement est-il dans un secteur affecté par le bruit ?</h1>
         <p>
-          Bruit routier, ferroviaire et aérien · qualité de l’air · observations
-          en direct
+          Vérifiez une adresse, puis explorez le bruit ferroviaire et aérien,
+          la qualité de l’air et les observations en direct du Val-d’Oise
         </p>
       </div>
       <button id="mobileLayers" class="mobile-layers">Données</button
@@ -68,6 +70,30 @@
           <button id="resetView">Recentrer</button
           ><button id="openData">Données & évolutions</button>
         </div>
+        <div class="dwelling-check">
+          <span class="eyebrow">CLASSEMENT SONORE ROUTIER</span>
+          <h2>Vérifier un logement</h2>
+          <p>
+            Ce logement est-il dans un secteur affecté par le bruit routier ?
+            Arrêté préfectoral n°17-146.
+          </p>
+          <label class="search-box dwelling-box"
+            ><span>Adresse</span>
+            <div>
+              <input
+                id="dwellingInput"
+                type="search"
+                placeholder="Ex. 12 rue de la Gare, Pontoise"
+                autocomplete="off"
+              />
+            </div>
+          </label>
+          <div id="dwellingResults" class="search-results" hidden></div>
+          <button id="dwellingPick" type="button" class="pick-button">
+            Cliquer un point sur la carte
+          </button>
+          <div id="dwellingResult" class="dwelling-result"></div>
+        </div>
         <div class="layers-scroll" aria-label="Couches cartographiques">
           <section class="layers-panel">
             <div class="section-head">
@@ -82,7 +108,29 @@
               <button id="clearAll" type="button">Tout effacer</button>
             </div>
             <div class="layer-group">
-              <span>BRUIT ROUTIER</span>
+              <span>CLASSEMENT SONORE ROUTIER · ARRÊTÉ N°17-146</span>
+              <div class="layer-cards">
+                <button class="layer-card active" data-layer="csLines">
+                  <i class="layer-swatch cs-line"></i
+                  ><span
+                    ><b>Tronçons classés</b
+                    ><small id="csLinesStatus"
+                      >Catégories 1 à 5 · arrêté n°17-146</small
+                    ></span
+                  ><i class="layer-switch"></i></button
+                ><button class="layer-card active" data-layer="csBuffer">
+                  <i class="layer-swatch cs-buffer"></i
+                  ><span
+                    ><b>Secteurs affectés par le bruit</b
+                    ><small id="csBufferStatus"
+                      >Empreinte réglementaire</small
+                    ></span
+                  ><i class="layer-switch"></i>
+                </button>
+              </div>
+            </div>
+            <div class="layer-group">
+              <span>BRUIT ROUTIER · CARTE STRATÉGIQUE</span>
               <div class="layer-cards">
                 <button class="layer-card active" data-layer="roadNoise">
                   <i class="layer-swatch noise-road"></i
@@ -232,6 +280,20 @@
           nocturne Ln, 2017. Classes de 40 à 75 dB(A). Les axes sont nommés avec
           OpenStreetMap.
         </p>
+        <h3>Classement sonore routier</h3>
+        <p>
+          DDT 95, classement sonore des infrastructures routières et son
+          empreinte sonore (arrêté préfectoral n°17-146), interrogés en direct
+          via les flux WFS publiés sur data.gouv.fr — aucune copie locale.
+          Catégorie 1 = secteur affecté de 300 m (le plus sévère), catégorie 5
+          = 10 m. La vérification « au logement » compare le point choisi à la
+          distance réglementaire (« es ») de chaque tronçon classé, sans la
+          demi-largeur de chaussée : c’est une lecture indicative, pas un
+          certificat d’exposition. Le bruit ferroviaire et aérien n’y figurent
+          pas. Si le service WFS de l’État est temporairement indisponible,
+          les couches et la vérification l’indiquent au lieu d’afficher une
+          valeur inventée.
+        </p>
         <h3>Bruit ferroviaire</h3>
         <p>
           DDT 95, grandes infrastructures SNCF, carte de type A, Lden, 2017.
@@ -280,11 +342,11 @@
         </div>
       </div>
     </dialog>
-    <link rel="stylesheet" href="css/fixes.css?v=1" />
+    <link rel="stylesheet" href="css/fixes.css?v=3" />
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="js/app.js?v=4"></script>
+    <script src="js/app.js?v=6"></script>
   </body>
 </html>
