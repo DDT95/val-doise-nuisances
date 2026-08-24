@@ -248,18 +248,37 @@ const CATEGORY_INFO = {
   4: { width: 30, day: "65 à 70 dB(A)", night: "60 à 65 dB(A)" },
   5: { width: 10, day: "60 à 65 dB(A)", night: "55 à 60 dB(A)" },
 };
+// Sévérité et conséquence en isolement, 1 = la plus sévère, 5 = la plus faible
+// des 5 catégories (échelle relative, pas une valeur dB d'isolement).
+const CATEGORY_SEVERITY = {
+  1: "la plus sévère des 5 catégories",
+  2: "sévérité élevée",
+  3: "sévérité modérée",
+  4: "sévérité faible",
+  5: "la plus faible des 5 catégories",
+};
+const CATEGORY_ISOLATION = {
+  1: "l’isolement acoustique renforcé le plus exigeant (méthode forfaitaire)",
+  2: "un isolement acoustique renforcé élevé",
+  3: "un isolement acoustique renforcé modéré",
+  4: "un isolement acoustique renforcé limité",
+  5: "l’isolement acoustique renforcé le plus faible des 5 catégories",
+};
+function categoryRow(cat, mode, arrete) {
+  const info = CATEGORY_INFO[cat];
+  if (!info) return "";
+  const refLevels =
+    mode === "routière"
+      ? ` Référence diurne ${info.day}, nocturne ${info.night}.`
+      : "";
+  return `<p class="flag-note-row"><span class="cat-chip" style="background:${csCategoryColor(cat)}">Cat. ${cat}</span><span><strong>Voie ${mode} (${arrete})</strong> — ${CATEGORY_SEVERITY[cat]}, secteur affecté de ${info.width} m de part et d’autre de la voie.${refLevels} Construction neuve à usage sensible (logement, école, santé…) dans cette bande : ${CATEGORY_ISOLATION[cat]}.</span></p>`;
+}
 function categoryLegendNote(roadCat, railCat) {
-  const parts = [];
-  if (CATEGORY_INFO[roadCat])
-    parts.push(
-      `Catégorie ${roadCat} routière (arrêté n°17-146) : référence diurne ${CATEGORY_INFO[roadCat].day}, nocturne ${CATEGORY_INFO[roadCat].night}, secteur de ${CATEGORY_INFO[roadCat].width} m.`,
-    );
-  if (CATEGORY_INFO[railCat])
-    parts.push(
-      `Catégorie ${railCat} ferroviaire (arrêté n°16249) : secteur de ${CATEGORY_INFO[railCat].width} m.`,
-    );
-  if (!parts.length) return "";
-  return `<p class="flag-note">${parts.join(" ")} Plus la catégorie est basse (1 = la plus sévère), plus l’isolement acoustique exigé pour une construction neuve y est renforcé (méthode forfaitaire, arrêté du 30 mai 1996).</p>`;
+  const rows =
+    categoryRow(roadCat, "routière", "arrêté n°17-146") +
+    categoryRow(railCat, "ferroviaire", "arrêté n°16249");
+  if (!rows) return "";
+  return `<div class="flag-note">${rows}</div>`;
 }
 function csLineLayer(mode, operator) {
   return L.geoJSON(null, {
