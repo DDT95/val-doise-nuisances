@@ -95,15 +95,15 @@ def fetch_geojson(source, verbose=False):
                 if isinstance(data.get("features"), list):
                     return fix_axis_order(data), type_name
                 if verbose:
-                    print(f"::debug::{version}/{output_format} : réponse JSON sans 'features' -> {raw[:200]!r}")
+                    print(f"{version}/{output_format} : réponse JSON sans 'features' -> {raw[:200]!r}")
                 last_error = f"{version}/{output_format} : pas de 'features' dans la réponse"
             except urllib.error.HTTPError as exc:
                 body = exc.read()[:300]
-                print(f"::debug::{version}/{output_format} : HTTP {exc.code} -> {body!r}")
+                print(f"{version}/{output_format} : HTTP {exc.code} -> {body!r}")
                 last_error = f"{version}/{output_format} : HTTP {exc.code}"
             except Exception as exc:  # on tente la combinaison suivante
                 if verbose:
-                    print(f"::debug::{version}/{output_format} : {type(exc).__name__} {exc}")
+                    print(f"{version}/{output_format} : {type(exc).__name__} {exc}")
                 last_error = f"{version}/{output_format} : {exc}"
     raise RuntimeError(f"Aucun format accepté pour la couche {type_name} ({last_error})")
 
