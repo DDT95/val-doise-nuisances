@@ -271,7 +271,7 @@ function categoryRow(cat, mode, arrete) {
   const dbStats = isRoad
     ? `<div><small>Jour</small><strong>${info.day}</strong></div><div><small>Nuit</small><strong>${info.night}</strong></div>`
     : "";
-  return `<div class="cat-card"><div class="cat-card-head"><span class="cat-chip" style="background:${csCategoryColor(cat)}">${cat}</span><div><strong>Voie ${mode}</strong><small>${arrete}</small></div><span class="cat-severity">Sévérité ${CATEGORY_SEVERITY[cat]}</span></div><div class="cat-stats"><div${isRoad ? "" : ' class="cat-stat-wide"'}><small>Secteur affecté</small><strong>${info.width} m</strong></div>${dbStats}<div class="cat-stat-wide"><small>Isolement renforcé exigé pour une construction neuve</small><strong>${CATEGORY_ISOLATION[cat]}</strong></div></div></div>`;
+  return `<div class="cat-card"><div class="cat-card-head"><div class="cat-card-title"><span class="cat-chip" style="background:${csCategoryColor(cat)}">${cat}</span><div><strong>Voie ${mode}</strong><small>${arrete}</small></div></div><span class="cat-severity">Sévérité ${CATEGORY_SEVERITY[cat]}</span></div><div class="cat-stats"><div${isRoad ? "" : ' class="cat-stat-wide"'}><small>Secteur affecté</small><strong>${info.width} m</strong></div>${dbStats}<div class="cat-stat-wide"><small>Isolement renforcé exigé pour une construction neuve</small><strong>${CATEGORY_ISOLATION[cat]}</strong></div></div></div>`;
 }
 function categoryLegendNote(roadCat, railCat) {
   const cards =
