@@ -8,6 +8,7 @@ d'en-tête CORS et ne peuvent donc pas être appelés depuis un navigateur.
 import json
 import os
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -78,7 +79,7 @@ def fix_axis_order(geojson):
     return geojson
 
 
-def fetch_geojson(source):
+def fetch_geojson(source, verbose=False):
     type_name = discover_type_name(source["capabilities"])
     last_error = None
     for version, type_param in WFS_VERSIONS:
@@ -89,10 +90,20 @@ def fetch_geojson(source):
                 f"&SRSNAME=EPSG:4326&OUTPUTFORMAT={urllib.parse.quote(output_format)}"
             )
             try:
-                data = json.loads(fetch(url))
+                raw = fetch(url)
+                data = json.loads(raw)
                 if isinstance(data.get("features"), list):
                     return fix_axis_order(data), type_name
+                if verbose:
+                    print(f"::debug::{version}/{output_format} : réponse JSON sans 'features' -> {raw[:200]!r}")
+                last_error = f"{version}/{output_format} : pas de 'features' dans la réponse"
+            except urllib.error.HTTPError as exc:
+                body = exc.read()[:300]
+                print(f"::debug::{version}/{output_format} : HTTP {exc.code} -> {body!r}")
+                last_error = f"{version}/{output_format} : HTTP {exc.code}"
             except Exception as exc:  # on tente la combinaison suivante
+                if verbose:
+                    print(f"::debug::{version}/{output_format} : {type(exc).__name__} {exc}")
                 last_error = f"{version}/{output_format} : {exc}"
     raise RuntimeError(f"Aucun format accepté pour la couche {type_name} ({last_error})")
 
@@ -101,7 +112,7 @@ def main():
     changed = False
     for path, source in SOURCES.items():
         try:
-            geojson, type_name = fetch_geojson(source)
+            geojson, type_name = fetch_geojson(source, verbose=True)
         except Exception as exc:
             print(f"::warning::{path} non synchronisé : {exc}", file=sys.stderr)
             continue
