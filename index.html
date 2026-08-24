@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       name="description"
-      content="Bruit, air et trafic dans le Val-d’Oise"
+      content="Vérifiez si un logement est dans un secteur affecté par le bruit routier (arrêté n°17-146), puis explorez les autres nuisances du Val-d’Oise."
     />
-    <title>Nuisances · Val-d’Oise · DDT 95</title>
+    <title>Classement sonore routier · Nuisances Val-d’Oise · DDT 95</title>
     <link rel="preconnect" href="https://tile.openstreetmap.org" />
     <link
       rel="stylesheet"
@@ -29,11 +29,11 @@
           alt="Préfet du Val-d’Oise"
       /></a>
       <div class="title-block">
-        <span class="eyebrow">ENVIRONNEMENT · TRANSPORTS · VAL-D’OISE</span>
-        <h1>Quelles nuisances affectent le territoire ?</h1>
+        <span class="eyebrow">CLASSEMENT SONORE ROUTIER · ARRÊTÉ N°17-146</span>
+        <h1>Mon logement est-il dans un secteur affecté par le bruit ?</h1>
         <p>
-          Bruit routier, ferroviaire et aérien · qualité de l’air · observations
-          en direct
+          Vérifiez une adresse, puis explorez le bruit ferroviaire et aérien,
+          la qualité de l’air et les observations en direct du Val-d’Oise
         </p>
       </div>
       <button id="mobileLayers" class="mobile-layers">Données</button
@@ -108,7 +108,29 @@
               <button id="clearAll" type="button">Tout effacer</button>
             </div>
             <div class="layer-group">
-              <span>BRUIT ROUTIER</span>
+              <span>CLASSEMENT SONORE ROUTIER · ARRÊTÉ N°17-146</span>
+              <div class="layer-cards">
+                <button class="layer-card active" data-layer="csLines">
+                  <i class="layer-swatch cs-line"></i
+                  ><span
+                    ><b>Tronçons classés</b
+                    ><small id="csLinesStatus"
+                      >Catégories 1 à 5 · arrêté n°17-146</small
+                    ></span
+                  ><i class="layer-switch"></i></button
+                ><button class="layer-card active" data-layer="csBuffer">
+                  <i class="layer-swatch cs-buffer"></i
+                  ><span
+                    ><b>Secteurs affectés par le bruit</b
+                    ><small id="csBufferStatus"
+                      >Empreinte réglementaire</small
+                    ></span
+                  ><i class="layer-switch"></i>
+                </button>
+              </div>
+            </div>
+            <div class="layer-group">
+              <span>BRUIT ROUTIER · CARTE STRATÉGIQUE</span>
               <div class="layer-cards">
                 <button class="layer-card active" data-layer="roadNoise">
                   <i class="layer-swatch noise-road"></i
@@ -123,28 +145,6 @@
                   ><span
                     ><b>Axes routiers principaux</b
                     ><small>A1 · A15 · A115 · A104 · N184 · RD</small></span
-                  ><i class="layer-switch"></i>
-                </button>
-              </div>
-            </div>
-            <div class="layer-group">
-              <span>CLASSEMENT SONORE ROUTIER (RÉGLEMENTAIRE)</span>
-              <div class="layer-cards">
-                <button class="layer-card" data-layer="csLines">
-                  <i class="layer-swatch cs-line"></i
-                  ><span
-                    ><b>Tronçons classés</b
-                    ><small id="csLinesStatus"
-                      >Catégories 1 à 5 · arrêté n°17-146</small
-                    ></span
-                  ><i class="layer-switch"></i></button
-                ><button class="layer-card" data-layer="csBuffer">
-                  <i class="layer-swatch cs-buffer"></i
-                  ><span
-                    ><b>Secteurs affectés par le bruit</b
-                    ><small id="csBufferStatus"
-                      >Empreinte réglementaire</small
-                    ></span
                   ><i class="layer-switch"></i>
                 </button>
               </div>
@@ -342,11 +342,11 @@
         </div>
       </div>
     </dialog>
-    <link rel="stylesheet" href="css/fixes.css?v=2" />
+    <link rel="stylesheet" href="css/fixes.css?v=3" />
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="js/app.js?v=5"></script>
+    <script src="js/app.js?v=6"></script>
   </body>
 </html>

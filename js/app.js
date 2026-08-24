@@ -21,7 +21,7 @@ const bounds = [
   state = {
     layers: {},
     stats: {},
-    active: new Set(["roadNoise", "roads", "communes"]),
+    active: new Set(["roadNoise", "roads", "communes", "csLines", "csBuffer"]),
     data: {},
   };
 function openDetail(html) {
@@ -333,7 +333,7 @@ state.layers.csLines = L.geoJSON(null, {
         { sticky: true },
       )
       .on("click", () => showCsRoute(f.properties)),
-});
+}).addTo(map);
 state.layers.csBuffer = L.geoJSON(null, {
   pane: "noise",
   style: () => ({
@@ -342,7 +342,7 @@ state.layers.csBuffer = L.geoJSON(null, {
     fillColor: "#8a97a8",
     fillOpacity: 0.28,
   }),
-});
+}).addTo(map);
 async function loadCsRoute() {
   $("csLinesStatus").textContent = "Chargement du service WFS…";
   $("csBufferStatus").textContent = "Chargement du service WFS…";
