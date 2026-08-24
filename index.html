@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       name="description"
-      content="Vérifiez si un logement est dans un secteur affecté par le bruit routier ou ferroviaire (arrêtés n°17-146 et n°16249), puis explorez les autres nuisances du Val-d’Oise."
+      content="Cliquez n’importe où sur la carte du Val-d’Oise pour connaître le classement sonore routier et ferroviaire (arrêtés n°17-146 et n°16249), le bruit stratégique et la qualité de l’air à cet endroit."
     />
     <title>Classement sonore routier et ferroviaire · Nuisances Val-d’Oise · DDT 95</title>
     <link rel="preconnect" href="https://tile.openstreetmap.org" />
@@ -29,10 +29,11 @@
       /></a>
       <div class="title-block">
         <span class="eyebrow">CLASSEMENT SONORE ROUTIER ET FERROVIAIRE</span>
-        <h1>Mon logement est-il dans un secteur affecté par le bruit ?</h1>
+        <h1>Quelles nuisances à cet endroit ?</h1>
         <p>
-          Vérifiez une adresse, puis explorez la qualité de l’air, le bruit
-          aérien et les observations en direct du Val-d’Oise
+          Cliquez n’importe où sur la carte : bruit routier et ferroviaire
+          réglementaire, qualité de l’air, bruit aérien et observations en
+          direct du Val-d’Oise
         </p>
       </div>
       <button id="mobileLayers" class="mobile-layers">Données</button
@@ -68,25 +69,6 @@
         <div class="quick-actions">
           <button id="resetView">Recentrer</button
           ><button id="openData">Données & évolutions</button>
-        </div>
-        <div class="dwelling-check">
-          <span class="eyebrow">CLASSEMENT SONORE ROUTIER ET FERROVIAIRE</span>
-          <h2>Vérifier un logement</h2>
-          <label class="search-box dwelling-box"
-            ><span>Adresse</span>
-            <div>
-              <input
-                id="dwellingInput"
-                type="search"
-                placeholder="Ex. 12 rue de la Gare, Pontoise"
-                autocomplete="off"
-              />
-            </div>
-          </label>
-          <div id="dwellingResults" class="search-results" hidden></div>
-          <button id="dwellingPick" type="button" class="pick-button">
-            Cliquer un point sur la carte
-          </button>
         </div>
         <div class="layers-scroll" aria-label="Couches cartographiques">
           <section class="layers-panel">
@@ -241,7 +223,10 @@
         </div>
         <div class="map-note">
           <span class="pulse"></span
-          ><span id="mapStatus">Cliquez un objet pour lire ses données</span>
+          ><span id="mapStatus"
+            >Cliquez n’importe où sur la carte pour voir les nuisances à cet
+            endroit</span
+          >
         </div>
       </section>
       <aside id="detailPanel" class="detail-panel">
@@ -291,13 +276,13 @@
           plus la catégorie est basse, plus l’isolement exigé est important.
         </p>
         <p>
-          La vérification « au logement » compare le point choisi à la
-          distance réglementaire (« es »/« tampon ») de chaque tronçon
-          classé le plus proche, route ou rail, sans la demi-largeur de
-          chaussée ou de voie : c’est une lecture indicative, pas un
-          certificat d’exposition. Le bruit aérien n’y figure pas. Si la
-          synchronisation échoue, les couches et la vérification l’indiquent
-          au lieu d’afficher une valeur inventée ou périmée.
+          Un clic sur la carte compare le point choisi à la distance
+          réglementaire (« es »/« tampon ») de chaque tronçon classé le plus
+          proche, route ou rail, sans la demi-largeur de chaussée ou de voie :
+          c’est une lecture indicative, pas un certificat d’exposition. Le
+          bruit aérien n’y figure pas. Si la synchronisation échoue, les
+          couches et le rapport de clic l’indiquent au lieu d’afficher une
+          valeur inventée ou périmée.
         </p>
         <h3>Bruit ferroviaire</h3>
         <p>
@@ -347,11 +332,11 @@
         </div>
       </div>
     </dialog>
-    <link rel="stylesheet" href="css/fixes.css?v=5" />
+    <link rel="stylesheet" href="css/fixes.css?v=6" />
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="js/app.js?v=8"></script>
+    <script src="js/app.js?v=9"></script>
   </body>
 </html>

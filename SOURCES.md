@@ -42,20 +42,25 @@ hôtellerie) doit respecter un isolement acoustique renforcé, calculé selon
 la méthode forfaitaire de l'arrêté du 30 mai 1996 (catégorie 1 = isolement
 le plus renforcé).
 
-Le widget « Vérifier un logement » géocode l'adresse saisie via l'API Adresse
-nationale (https://api-adresse.data.gouv.fr/, sans clé, licence ouverte), puis
-calcule la distance du point au tronçon classé le plus proche (route et rail)
-et la compare à la largeur réglementaire du secteur affecté (colonne « es »
-côté route, « tampon » côté rail — identique à la colonne « Secteur (m) » de
-l'annexe 3 de l'arrêté routier). Il affiche aussi, quand elle est disponible,
-la classe de bruit modélisée par les cartes stratégiques (Ln routier, Lden
-ferroviaire) au même point, dans le même panneau. C'est une lecture
-indicative : elle ignore la demi-largeur de la chaussée ou de la voie
-(quelques mètres, prévue par la méthodologie DDT 95 mais non reconstituable
-depuis les couches publiées) et ne couvre pas le bruit aérien. Pour toute
-démarche réglementaire (isolement acoustique, permis de construire),
-consulter l'arrêté n°17-146 (routier), l'arrêté n°16249 (ferroviaire) et le
-service instructeur de la DDT 95.
+Un clic n'importe où sur la carte calcule la distance du point au tronçon
+classé le plus proche (route et rail) et la compare à la largeur
+réglementaire du secteur affecté (colonne « es » côté route, « tampon » côté
+rail — identique à la colonne « Secteur (m) » de l'annexe 3 de l'arrêté
+routier). Le panneau affiche aussi, quand elle est disponible, la classe de
+bruit modélisée par les cartes stratégiques (Ln routier, Lden ferroviaire)
+et les indicateurs air de la commune du point cliqué, dans le même panneau.
+C'est une lecture indicative : elle ignore la demi-largeur de la chaussée ou
+de la voie (quelques mètres, prévue par la méthodologie DDT 95 mais non
+reconstituable depuis les couches publiées) et ne couvre pas le bruit
+aérien. Pour toute démarche réglementaire (isolement acoustique, permis de
+construire), consulter l'arrêté n°17-146 (routier), l'arrêté n°16249
+(ferroviaire) et le service instructeur de la DDT 95.
+
+Ce site s'adresse à un public professionnel (agents instructeurs,
+collectivités, bureaux d'études) : la lecture des couches et du panneau de
+clic suppose une familiarité avec le classement sonore. Il n'y a pas de
+recherche d'adresse dédiée — seule la recherche de commune, en haut du menu,
+reste disponible pour se déplacer sur la carte.
 
 ## Circulation routière directe
 

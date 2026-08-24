@@ -268,20 +268,6 @@ function categoryLegendNote(roadCat, railCat) {
   if (!parts.length) return "";
   return `<p class="flag-note">${parts.join(" ")} Plus la catégorie est basse (1 = la plus sévère), plus l’isolement acoustique exigé pour une construction neuve y est renforcé (méthode forfaitaire, arrêté du 30 mai 1996).</p>`;
 }
-function showCsFeature(props, mode) {
-  const isRoad = mode === "road";
-  const name = esc(
-    getProp(props, "name", "nom", "codeligne", "ligneratp") ?? "Tronçon sans nom",
-  );
-  const catRaw = getProp(props, "categorie");
-  const cat = esc(catRaw ?? "—");
-  const es = getProp(props, "es", "tampon");
-  const communes = getProp(props, "insee_com", "communes");
-  const operator = getProp(props, "_operator");
-  openDetail(
-    `<span class="detail-tag">CLASSEMENT SONORE${operator ? " · " + esc(operator) : ""}</span><h2>${name}</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Catégorie</small><strong>${cat}</strong></div><div class="kpi-tile"><small>Secteur affecté</small><strong>${es ? esc(es) + " m" : "—"}</strong></div></div>${communes ? `<p><strong>Communes concernées :</strong> ${esc(Array.isArray(communes) ? communes.join(", ") : communes)}</p>` : ""}${categoryLegendNote(isRoad ? catRaw : null, isRoad ? null : catRaw)}<p class="flag-note">Classement issu de l’arrêté préfectoral ${isRoad ? "n°17-146 (routier)" : "n°16249 (ferroviaire)"}.</p>`,
-  );
-}
 function csLineLayer(mode, operator) {
   return L.geoJSON(null, {
     pane: "network",
@@ -293,10 +279,13 @@ function csLineLayer(mode, operator) {
     }),
     onEachFeature: (f, l) => {
       if (operator) f.properties._operator = operator;
+      // Pas de handler de clic dédié : un clic n'importe où sur la carte
+      // ouvre le rapport combiné de toutes les nuisances à ce point (voir
+      // plus bas), y compris quand on clique pile sur un tronçon.
       l.bindTooltip(
         `<strong>${esc(getProp(f.properties, "name", "nom", "codeligne", "ligneratp") ?? "Tronçon")}</strong> · catégorie ${esc(getProp(f.properties, "categorie") ?? "—")}`,
         { sticky: true },
-      ).on("click", () => showCsFeature(f.properties, mode));
+      );
     },
   });
 }
@@ -437,14 +426,28 @@ function matchTile(m) {
   const width = esc(getProp(m.props, "es", "tampon") ?? "—");
   return `<div class="kpi-tile warn"><small>${operator ? esc(operator) + " · " : ""}${name}</small><strong>Catégorie ${cat}</strong><em>Secteur ${width} m</em></div>`;
 }
-function checkDwelling(lon, lat, label) {
-  if (state.layers.dwellingMarker) map.removeLayer(state.layers.dwellingMarker);
-  state.layers.dwellingMarker = L.marker([lat, lon]).addTo(map);
-  if (label) state.layers.dwellingMarker.bindPopup(esc(label)).openPopup();
-  map.setView([lat, lon], 16);
-  const addressLine = label
-    ? `<p><strong>Point vérifié :</strong> ${esc(label)}</p>`
-    : "";
+function communeAt(lon, lat) {
+  const communes = state.data.communes;
+  if (!communes) return null;
+  for (const f of communes.features) {
+    const geom = f.geometry;
+    if (!geom) continue;
+    const polygons =
+      geom.type === "Polygon" ? [geom.coordinates] : geom.type === "MultiPolygon" ? geom.coordinates : null;
+    if (!polygons) continue;
+    for (const polygon of polygons) {
+      if (
+        pointInRing(lon, lat, polygon[0]) &&
+        !polygon.slice(1).some((hole) => pointInRing(lon, lat, hole))
+      )
+        return f;
+    }
+  }
+  return null;
+}
+function showNuisancesAt(lon, lat) {
+  if (state.layers.clickMarker) map.removeLayer(state.layers.clickMarker);
+  state.layers.clickMarker = L.marker([lat, lon]).addTo(map);
   const roadReady = !!state.data.csRoadLines,
     railReady = !!state.data.csRailLines;
   const road = regulatoryMatches(lon, lat, state.data.csRoadLines);
@@ -466,7 +469,7 @@ function checkDwelling(lon, lat, label) {
   }
   const noiseHtml =
     roadDb || railDb
-      ? `<h3>Niveau sonore stratégique modélisé</h3><div class="kpi-grid">${
+      ? `<h3>Bruit · carte stratégique</h3><div class="kpi-grid">${
           roadDb
             ? `<div class="kpi-tile"><small>Routier · Ln</small><strong>${roadDb} à ${roadDb + 5} dB(A)</strong></div>`
             : ""
@@ -476,59 +479,23 @@ function checkDwelling(lon, lat, label) {
             : ""
         }</div>`
       : "";
+  const commune = communeAt(lon, lat);
+  const communeCode = commune
+    ? String(
+        commune.properties.code || commune.properties.insee || commune.properties.INSEE_COM || "",
+      )
+    : null;
+  const s = communeCode ? state.stats[communeCode] : null;
+  const a = communeCode ? state.data.liveAir?.[communeCode] : null;
+  const airHtml = s
+    ? `<h3>Air · ${esc(s.nom)}</h3><div class="kpi-grid">${
+        a ? `<div class="kpi-tile"><small>Indice ATMO aujourd’hui</small><strong>${esc(a.lib_qual)}</strong></div>` : ""
+      }<div class="kpi-tile"><small>Air très dégradé (2024)</small><strong>${fmt(s.air_degrade_pct, 1)} %</strong><em>part de la population communale</em></div></div>`
+    : "";
   openDetail(
-    `<span class="detail-tag">NUISANCES SONORES · CE POINT</span><h2>${hasMatch ? "Dans un secteur affecté" : "Hors secteur classé"}</h2>${addressLine}${regHtml}${noiseHtml}<p class="flag-note">Vérification indicative à partir des géométries officielles, sans la demi-largeur de chaussée ou de voie. Le bruit aérien n’est pas couvert ici. En cas de doute (isolement acoustique, permis de construire…), consultez le service instructeur de la DDT 95.</p>`,
+    `<span class="detail-tag">NUISANCES · CE POINT</span><h2>${hasMatch ? "Dans un secteur affecté par le bruit" : "Hors secteur classé"}</h2>${regHtml}${noiseHtml}${airHtml}<p class="flag-note">Vérification indicative à partir des géométries officielles, sans la demi-largeur de chaussée ou de voie. Le bruit aérien n’est pas couvert ici. En cas de doute (isolement acoustique, permis de construire…), consultez le service instructeur de la DDT 95.</p>`,
   );
 }
-let dwellingHits = [],
-  dwellingTimer,
-  pickMode = false;
-async function geocodeAddress(q) {
-  const res = await fetch(
-    `https://api-adresse.data.gouv.fr/search/?limit=5&lat=49.08&lon=2.10&q=${encodeURIComponent(q)}`,
-  );
-  if (!res.ok) throw new Error("Géocodage indisponible");
-  return (await res.json()).features || [];
-}
-$("dwellingInput").oninput = () => {
-  clearTimeout(dwellingTimer);
-  const q = $("dwellingInput").value.trim();
-  if (q.length < 4) {
-    $("dwellingResults").hidden = true;
-    return;
-  }
-  dwellingTimer = setTimeout(async () => {
-    try {
-      dwellingHits = await geocodeAddress(q);
-      $("dwellingResults").innerHTML = dwellingHits
-        .map((f, i) => `<button data-i="${i}">${esc(f.properties.label)}</button>`)
-        .join("");
-      $("dwellingResults").hidden = !dwellingHits.length;
-      $("dwellingResults")
-        .querySelectorAll("button")
-        .forEach(
-          (b) =>
-            (b.onclick = () => {
-              const f = dwellingHits[Number(b.dataset.i)];
-              const [lon, lat] = f.geometry.coordinates;
-              $("dwellingInput").value = f.properties.label;
-              $("dwellingResults").hidden = true;
-              checkDwelling(lon, lat, f.properties.label);
-            }),
-        );
-    } catch {
-      $("dwellingResults").hidden = true;
-    }
-  }, 300);
-};
-$("dwellingPick").onclick = () => {
-  pickMode = !pickMode;
-  $("dwellingPick").classList.toggle("active", pickMode);
-  $("dwellingPick").textContent = pickMode
-    ? "Cliquez sur la carte…"
-    : "Cliquer un point sur la carte";
-  map.getContainer().style.cursor = pickMode ? "crosshair" : "";
-};
 function showCommune(code) {
   const s = state.stats[code];
   if (!s) return;
@@ -564,27 +531,7 @@ function sampleNoise(key, latlng) {
       ((b[0] - d[0]) ** 2 + (b[1] - d[1]) ** 2 + (b[2] - d[2]) ** 2),
   )[0][3];
 }
-map.on("click", (e) => {
-  if (pickMode) {
-    pickMode = false;
-    $("dwellingPick").classList.remove("active");
-    $("dwellingPick").textContent = "Cliquer un point sur la carte";
-    map.getContainer().style.cursor = "";
-    checkDwelling(e.latlng.lng, e.latlng.lat, null);
-    return;
-  }
-  for (const key of ["roadNoise", "railNoise"]) {
-    if (!state.active.has(key)) continue;
-    const v = sampleNoise(key, e.latlng);
-    if (v) {
-      const road = key === "roadNoise";
-      openDetail(
-        `<span class="detail-tag">${road ? "BRUIT ROUTIER" : "BRUIT FERROVIAIRE"}</span><h2>${v} à ${v + 5} dB(A)</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Indicateur</small><strong>${road ? "Ln" : "Lden"}</strong></div><div class="kpi-tile"><small>Millésime</small><strong>2017</strong></div></div><p>Classe acoustique modélisée au point cliqué. ${road ? "Ln décrit la période nocturne." : "Lden agrège jour, soirée et nuit avec pondération."}</p><p class="flag-note">Carte stratégique réglementaire : valeur moyenne modélisée, pas une mesure en direct.</p>`,
-      );
-      break;
-    }
-  }
-});
+map.on("click", (e) => showNuisancesAt(e.latlng.lng, e.latlng.lat));
 function setupSearch(geo) {
   const items = geo.features
     .map((f) => {
