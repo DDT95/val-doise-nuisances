@@ -1,8 +1,8 @@
 # Nuisances dans le Val-d’Oise
 
-Décryptage cartographique de l’Atlas territorial de la DDT 95 consacré aux nuisances routières, ferroviaires et aériennes ainsi qu’à la qualité de l’air.
+Décryptage cartographique de l’Atlas territorial de la DDT 95 consacré aux nuisances routières, ferroviaires et aériennes.
 
-La carte sépare les sources : cartes stratégiques de bruit routier et ferroviaire, axes nommés, voies ferrées nommées, aéronefs ADS-B en direct, indicateurs communaux Airparif et accès au trafic Sytadin.
+La carte sépare les sources : classement sonore routier et ferroviaire réglementaire, cartes stratégiques de bruit routier et ferroviaire, axes nommés, voies ferrées nommées, aéronefs ADS-B en direct et accès au trafic Sytadin.
 
 Application statique sans compilation : ouvrir `index.html` via un serveur HTTP local.
 

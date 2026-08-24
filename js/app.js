@@ -21,7 +21,7 @@ const bounds = [
   state = {
     layers: {},
     stats: {},
-    active: new Set(["roadNoise", "roads", "communes", "csRoad", "csRail"]),
+    active: new Set(["roadNoise", "roads", "csRoad", "csRail"]),
     data: {},
   };
 function openDetail(html) {
@@ -193,19 +193,12 @@ Promise.all(
         })
         .on("click", () => showRail(f.properties)),
   });
-  state.layers.communes = L.geoJSON(communes, {
-    style: { color: "#263b57", weight: 0.7, opacity: 0.62, fillOpacity: 0.01 },
-    onEachFeature: (f, l) => {
-      const code = String(
-        f.properties.code || f.properties.insee || f.properties.INSEE_COM || "",
-      );
-      l.bindTooltip(stats[code]?.nom || f.properties.nom, { sticky: true });
-      l.on("click", () => showCommune(code));
-    },
-  }).addTo(map);
+  // Non affichée sur la carte (limites communales retirées) : conservée
+  // uniquement comme source pour la recherche de territoire et les bornes
+  // de recentrage (getBounds()).
+  state.layers.communes = L.geoJSON(communes);
   map.fitBounds(state.layers.communes.getBounds(), { padding: [16, 16] });
   setupSearch(communes);
-  renderLiveAir();
   loadAircraft();
 });
 function showRoad(p) {
@@ -426,25 +419,6 @@ function matchTile(m) {
   const width = esc(getProp(m.props, "es", "tampon") ?? "—");
   return `<div class="kpi-tile warn"><small>${operator ? esc(operator) + " · " : ""}${name}</small><strong>Catégorie ${cat}</strong><em>Secteur ${width} m</em></div>`;
 }
-function communeAt(lon, lat) {
-  const communes = state.data.communes;
-  if (!communes) return null;
-  for (const f of communes.features) {
-    const geom = f.geometry;
-    if (!geom) continue;
-    const polygons =
-      geom.type === "Polygon" ? [geom.coordinates] : geom.type === "MultiPolygon" ? geom.coordinates : null;
-    if (!polygons) continue;
-    for (const polygon of polygons) {
-      if (
-        pointInRing(lon, lat, polygon[0]) &&
-        !polygon.slice(1).some((hole) => pointInRing(lon, lat, hole))
-      )
-        return f;
-    }
-  }
-  return null;
-}
 function showNuisancesAt(lon, lat) {
   if (state.layers.clickMarker) map.removeLayer(state.layers.clickMarker);
   state.layers.clickMarker = L.marker([lat, lon]).addTo(map);
@@ -479,28 +453,8 @@ function showNuisancesAt(lon, lat) {
             : ""
         }</div>`
       : "";
-  const commune = communeAt(lon, lat);
-  const communeCode = commune
-    ? String(
-        commune.properties.code || commune.properties.insee || commune.properties.INSEE_COM || "",
-      )
-    : null;
-  const s = communeCode ? state.stats[communeCode] : null;
-  const a = communeCode ? state.data.liveAir?.[communeCode] : null;
-  const airHtml = s
-    ? `<h3>Air · ${esc(s.nom)}</h3><div class="kpi-grid">${
-        a ? `<div class="kpi-tile"><small>Indice ATMO aujourd’hui</small><strong>${esc(a.lib_qual)}</strong></div>` : ""
-      }<div class="kpi-tile"><small>Air très dégradé (2024)</small><strong>${fmt(s.air_degrade_pct, 1)} %</strong><em>part de la population communale</em></div></div>`
-    : "";
   openDetail(
-    `<span class="detail-tag">NUISANCES · CE POINT</span><h2>${hasMatch ? "Dans un secteur affecté par le bruit" : "Hors secteur classé"}</h2>${regHtml}${noiseHtml}${airHtml}<p class="flag-note">Vérification indicative à partir des géométries officielles, sans la demi-largeur de chaussée ou de voie. Le bruit aérien n’est pas couvert ici. En cas de doute (isolement acoustique, permis de construire…), consultez le service instructeur de la DDT 95.</p>`,
-  );
-}
-function showCommune(code) {
-  const s = state.stats[code];
-  if (!s) return;
-  openDetail(
-    `<span class="detail-tag">PORTRAIT COMMUNAL · 2024</span><h2>${esc(s.nom)}</h2><p><strong>${fmt(s.population)}</strong> habitants dans la statistique d’exposition.</p><div class="kpi-grid"><div class="kpi-tile warn"><small>Bruit très dégradé</small><strong>${fmt(s.bruit_degrade_pct, 1)} %</strong><em>ce n’est pas « tout bruit »</em></div><div class="kpi-tile"><small>Air très dégradé</small><strong>${fmt(s.air_degrade_pct, 1)} %</strong><em>ce n’est pas « toute pollution »</em></div><div class="kpi-tile warn"><small>Cumul maximal</small><strong>${fmt(s.cumul_tres_degrade_pct, 1)} %</strong></div><div class="kpi-tile"><small>Population</small><strong>${fmt(s.population)}</strong></div></div><p class="flag-note">0 % signifie : aucune population dans la classe « très dégradée » concernée. Cela ne signifie jamais absence de route, de train, d’avion, de bruit ou de pollution.</p>`,
+    `<span class="detail-tag">NUISANCES · CE POINT</span><h2>${hasMatch ? "Dans un secteur affecté par le bruit" : "Hors secteur classé"}</h2>${regHtml}${noiseHtml}<p class="flag-note">Vérification indicative à partir des géométries officielles, sans la demi-largeur de chaussée ou de voie. Le bruit aérien n’est pas couvert ici. En cas de doute (isolement acoustique, permis de construire…), consultez le service instructeur de la DDT 95.</p>`,
   );
 }
 function sampleNoise(key, latlng) {
@@ -555,7 +509,6 @@ function setupSearch(geo) {
           (b.onclick = () => {
             const x = items.find((i) => i.code === b.dataset.code);
             map.fitBounds(L.geoJSON(x.f).getBounds(), { maxZoom: 13 });
-            showCommune(x.code);
             $("searchResults").hidden = true;
           }),
       );
@@ -678,124 +631,10 @@ async function loadAircraft() {
 }
 loadAircraft();
 setInterval(loadAircraft, 60000);
-function renderAir() {
-  if (state.layers.air) map.removeLayer(state.layers.air);
-  if (!state.active.has("air")) return;
-  state.layers.air = L.geoJSON(state.data.communes, {
-    style: (f) => {
-      const c = String(
-          f.properties.code ||
-            f.properties.insee ||
-            f.properties.INSEE_COM ||
-            "",
-        ),
-        v = state.stats[c]?.air_degrade_pct || 0;
-      return {
-        color: "#fff",
-        weight: 0.7,
-        fillColor:
-          v >= 20
-            ? "#612a4c"
-            : v >= 10
-              ? "#9d597f"
-              : v > 0
-                ? "#d7a9c1"
-                : "#edf0f4",
-        fillOpacity: 0.78,
-      };
-    },
-    onEachFeature: (f, l) => {
-      const c = String(
-          f.properties.code ||
-            f.properties.insee ||
-            f.properties.INSEE_COM ||
-            "",
-        ),
-        s = state.stats[c];
-      l.bindTooltip(
-        `${esc(s?.nom || f.properties.nom)} · ${fmt(s?.air_degrade_pct, 1)} % très dégradé`,
-        { sticky: true },
-      ).on("click", () => showCommune(c));
-    },
-  }).addTo(map);
-}
-const atmoColors = {
-  Bon: "#50a654",
-  Moyen: "#a8c956",
-  Dégradé: "#f0e641",
-  Mauvais: "#e89b38",
-  "Très mauvais": "#d94b41",
-  "Extrêmement mauvais": "#7d2048",
-};
-function renderLiveAir() {
-  if (state.layers.liveAir) map.removeLayer(state.layers.liveAir);
-  if (
-    !state.active.has("liveAir") ||
-    !state.data.communes ||
-    !state.data.liveAir
-  )
-    return;
-  state.layers.liveAir = L.geoJSON(state.data.communes, {
-    style: (f) => {
-      const c = String(
-          f.properties.code ||
-            f.properties.insee ||
-            f.properties.INSEE_COM ||
-            "",
-        ),
-        a = state.data.liveAir[c];
-      return {
-        color: "#fff",
-        weight: 0.8,
-        fillColor: a?.coul_qual || atmoColors[a?.lib_qual] || "#dfe5e8",
-        fillOpacity: a?.lib_qual ? 0.55 : 0,
-      };
-    },
-    onEachFeature: (f, l) => {
-      const c = String(
-          f.properties.code ||
-            f.properties.insee ||
-            f.properties.INSEE_COM ||
-            "",
-        ),
-        a = state.data.liveAir[c];
-      if (!a) return;
-      l.bindTooltip(`${esc(a.lib_zone)} · air ${esc(a.lib_qual)}`, {
-        sticky: true,
-      }).on("click", () =>
-        openDetail(
-          `<span class="detail-tag">QUALITÉ DE L’AIR · AUJOURD’HUI</span><h2>${esc(a.lib_zone)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>Indice ATMO</small><strong>${esc(a.lib_qual)}</strong></div><div class="kpi-tile"><small>Date</small><strong>${new Date(a.date_ech).toLocaleDateString("fr-FR")}</strong></div><div class="kpi-tile"><small>NO₂</small><strong>${esc(a.code_no2)}</strong></div><div class="kpi-tile"><small>O₃</small><strong>${esc(a.code_o3)}</strong></div><div class="kpi-tile"><small>PM10</small><strong>${esc(a.code_pm10)}</strong></div><div class="kpi-tile"><small>PM2,5</small><strong>${esc(a.code_pm25)}</strong></div></div><p class="flag-note">Indice quotidien officiel Atmo France produit par Airparif. Les sous-indices vont de 1 (bon) à 6 (extrêmement mauvais).</p>`,
-        ),
-      );
-    },
-  }).addTo(map);
-}
-async function loadLiveAir() {
-  try {
-    const d = await fetch(`data/air-live.json?v=${Date.now()}`, {
-        cache: "no-store",
-      }).then((r) => r.json()),
-      features = d.features || [];
-    state.data.liveAir = Object.fromEntries(
-      features.map((f) => [String(f.properties.code_zone), f.properties]),
-    );
-    const latest = features[0]?.properties;
-    $("liveAirStatus").textContent = latest
-      ? `Airparif · indice du ${new Date(latest.date_ech).toLocaleDateString("fr-FR")}`
-      : "Airparif · aucune donnée";
-    renderLiveAir();
-  } catch {
-    $("liveAirStatus").textContent = "Airparif · dernier indice indisponible";
-  }
-}
-loadLiveAir();
-setInterval(loadLiveAir, 3600000);
 function toggle(name, on) {
   state.active[on ? "add" : "delete"](name);
   const layer = state.layers[name];
-  if (name === "air") renderAir();
-  else if (name === "liveAir") renderLiveAir();
-  else if (layer) {
+  if (layer) {
     if (on) layer.addTo(map);
     else map.removeLayer(layer);
   }
@@ -814,8 +653,6 @@ function updateLegend() {
     parts.push(
       '<span class="traffic-key"><i></i><b>fluide</b><i></i><b>ralenti</b><i></i><b>saturé</b></span>',
     );
-  if (state.active.has("liveAir"))
-    parts.push('<span><i class="air-ramp"></i>Indice ATMO du jour</span>');
   if (state.active.has("roadNoise"))
     parts.push(
       '<span><i class="noise-ramp"></i>Bruit routier · Ln 40–75 dB(A)</span>',
@@ -838,18 +675,12 @@ function updateLegend() {
     parts.push('<span><i class="rail-line"></i>Voies ferrées</span>');
   if (state.active.has("aircraft"))
     parts.push('<span><i class="plane-dot"></i>Avions maintenant</span>');
-  if (state.active.has("air"))
-    parts.push(
-      '<span><i class="air-ramp"></i>Air très dégradé · population</span>',
-    );
   $("legendContent").innerHTML =
     parts.join("") || "<small>Aucune couche active</small>";
 }
 function openSynthesis() {
   const pop = 1221750,
-    air = 374724.29,
-    noise = 26794.99,
-    both = 17079.79;
+    noise = 26794.99;
   const communes = Object.values(state.stats || {});
   const noiseRanking = communes
     .map((commune) => ({
@@ -858,15 +689,8 @@ function openSynthesis() {
     }))
     .sort((a, b) => b.exposed - a.exposed)
     .slice(0, 5);
-  const bothRanking = communes
-    .map((commune) => ({
-      ...commune,
-      exposed: (commune.population * commune.cumul_tres_degrade_pct) / 100,
-    }))
-    .sort((a, b) => b.exposed - a.exposed)
-    .slice(0, 5);
   $("synthesisContent").innerHTML =
-    `<div class="synthesis-dashboard-head"><span class="detail-tag">SYNTHÈSE DÉPARTEMENTALE</span><h2>Où se concentrent les nuisances ?</h2><p>Population estimée dans les classes les plus dégradées · Airparif–Bruitparif 2024.</p></div><div class="synthesis-dashboard-kpis"><div class="kpi-tile"><small>Population étudiée</small><strong>${fmt(pop)}</strong><em>habitants</em></div><div class="kpi-tile"><small>Air très dégradé</small><strong>${fmt(air)}</strong><em>${fmt((100 * air) / pop, 1)} % des habitants</em></div><div class="kpi-tile warn"><small>Bruit très dégradé</small><strong>${fmt(noise)}</strong><em>${fmt((100 * noise) / pop, 1)} % des habitants</em></div><div class="kpi-tile warn"><small>Cumul air + bruit</small><strong>${fmt(both)}</strong><em>${fmt((100 * both) / pop, 1)} % des habitants</em></div><div class="kpi-tile"><small>Communes concernées</small><strong>${communes.filter((c) => c.bruit_degrade_pct > 0).length}</strong><em>par le bruit très dégradé</em></div></div><section class="synthesis-viz"><strong>Poids départemental</strong>${bar("Air très dégradé", (100 * air) / pop, "#8b4b73")}${bar("Bruit très dégradé", (100 * noise) / pop, "#d66b32")}${bar("Cumul air + bruit", (100 * both) / pop, "#6b243e")}</section><section class="synthesis-viz"><strong>Plus grands effectifs exposés au bruit</strong><small class="synthesis-caption">Habitants estimés · part de la commune</small>${rankingBars(noiseRanking, "bruit_degrade_pct", "#d66b32")}</section><section class="synthesis-viz"><strong>Plus grands effectifs en cumul</strong><small class="synthesis-caption">Air et bruit très dégradés · habitants estimés</small>${rankingBars(bothRanking, "cumul_tres_degrade_pct", "#6b243e")}</section>`;
+    `<div class="synthesis-dashboard-head"><span class="detail-tag">SYNTHÈSE DÉPARTEMENTALE</span><h2>Où se concentre le bruit ?</h2><p>Population estimée dans les classes les plus dégradées · Bruitparif 2024.</p></div><div class="synthesis-dashboard-kpis"><div class="kpi-tile"><small>Population étudiée</small><strong>${fmt(pop)}</strong><em>habitants</em></div><div class="kpi-tile warn"><small>Bruit très dégradé</small><strong>${fmt(noise)}</strong><em>${fmt((100 * noise) / pop, 1)} % des habitants</em></div><div class="kpi-tile"><small>Communes concernées</small><strong>${communes.filter((c) => c.bruit_degrade_pct > 0).length}</strong><em>par le bruit très dégradé</em></div></div><section class="synthesis-viz"><strong>Poids départemental</strong>${bar("Bruit très dégradé", (100 * noise) / pop, "#d66b32")}</section><section class="synthesis-viz"><strong>Plus grands effectifs exposés au bruit</strong><small class="synthesis-caption">Habitants estimés · part de la commune</small>${rankingBars(noiseRanking, "bruit_degrade_pct", "#d66b32")}</section>`;
   $("synthesisDialog").showModal();
 }
 function rankingBars(rows, percentageKey, color) {

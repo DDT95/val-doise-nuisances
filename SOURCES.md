@@ -20,7 +20,7 @@ Les couches sont rasterisées à 100 mètres pour la consultation web. La valeur
 Ces huit couches (2 routières + 3 exploitants ferroviaires × 2) sont
 synchronisées une fois par jour par une action GitHub
 (`.github/workflows/sync-cs-route.yml`, script `scripts/sync-cs-route.py`),
-sur le même principe que les flux Sytadin/ADS-B/Airparif de ce dépôt : le
+sur le même principe que les flux Sytadin/ADS-B de ce dépôt : le
 serveur appelle `GetCapabilities` pour découvrir le nom technique de chaque
 couche puis `GetFeature` en sortie GeoJSON, et le résultat est commité dans
 `data/cs-*.geojson`. Cet appel ne peut pas se faire directement depuis le
@@ -47,9 +47,8 @@ classé le plus proche (route et rail) et la compare à la largeur
 réglementaire du secteur affecté (colonne « es » côté route, « tampon » côté
 rail — identique à la colonne « Secteur (m) » de l'annexe 3 de l'arrêté
 routier). Le panneau affiche aussi, quand elle est disponible, la classe de
-bruit modélisée par les cartes stratégiques (Ln routier, Lden ferroviaire)
-et les indicateurs air de la commune du point cliqué, dans le même panneau.
-C'est une lecture indicative : elle ignore la demi-largeur de la chaussée ou
+bruit modélisée par les cartes stratégiques (Ln routier, Lden ferroviaire),
+dans le même panneau. C'est une lecture indicative : elle ignore la demi-largeur de la chaussée ou
 de la voie (quelques mètres, prévue par la méthodologie DDT 95 mais non
 reconstituable depuis les couches publiées) et ne couvre pas le bruit
 aérien. Pour toute démarche réglementaire (isolement acoustique, permis de
@@ -69,23 +68,22 @@ reste disponible pour se déplacer sur la carte.
 
 Le flux Bison Futé est mis à jour toutes les six minutes, mais son référentiel public ne contient actuellement pas les stations de la DiRIF nécessaires pour cartographier correctement le Val-d’Oise. La carte renvoie donc vers Sytadin et n’invente ni vitesse ni débit local.
 
-## Coexposition air-bruit 2024
+## Bruit très dégradé par commune (synthèse départementale)
 
-- Producteurs : Airparif et Bruitparif.
+- Producteur : Bruitparif (à partir du jeu air-bruit co-produit avec Airparif).
 - Source : https://www.bruitparif.fr/opendata-air-bruit/
-- Fichiers : `Couches SIG air-bruit 2024_9_classes.zip` et `Statistiques air-bruit 2024.xlsx`.
+- Fichiers : `Couches SIG air-bruit 2024_9_classes.zip` et `Statistiques air-bruit 2024.xlsx` — seule la composante bruit est utilisée par ce site.
 - Citation demandée : « Source des données : Cartographie air-bruit établie par Airparif et Bruitparif – http://carto.airparif.bruitparif.fr ».
-- Licence : Licence Ouverte pour les données SIG Bruitparif ; données Airparif sous ODbL.
+- Licence : Licence Ouverte pour les données SIG Bruitparif.
 - Méthode : https://www.bruitparif.fr/la-methodologie-d-elaboration-de-la-cartographie-air-bruit/
 
-La carte stratégique de l’air agrège les moyennes annuelles de NO₂, PM₁₀ et PM₂,₅. La carte stratégique globale du bruit agrège les transports routier, ferroviaire et aérien. Le millésime de publication est 2024 ; hors périphérique parisien, les données acoustiques reposent principalement sur les conditions de trafic 2019 et les cartes de quatrième échéance 2022.
+La carte stratégique globale du bruit agrège les transports routier, ferroviaire et aérien. Le millésime de publication est 2024 ; hors périphérique parisien, les données acoustiques reposent principalement sur les conditions de trafic 2019 et les cartes de quatrième échéance 2022. Ce site n'affiche que la composante bruit de ce jeu de données ; la qualité de l'air est traitée sur un autre support et n'est pas reprise ici.
 
 ### Traitement local
 
 1. Découpage de la couche régionale à l’emprise du Val-d’Oise.
-2. Rasterisation à 100 m pour une consultation web légère, sans réinterprétation des neuf classes officielles.
-3. Extraction des lignes du département 95 dans le tableur communal.
-4. Calcul des parts de population par addition des classes officielles : air très dégradé = classes 31, 32, 33 ; bruit très dégradé = 13, 23, 33 ; cumul maximal = 33.
+2. Extraction des lignes du département 95 dans le tableur communal.
+3. Calcul de la part de population en bruit très dégradé par addition des classes officielles 13, 23, 33.
 
 ## Aéronefs en direct
 
@@ -102,7 +100,7 @@ Le score affiché est une convention visuelle, non réglementaire : 90 sous 3 00
 
 ## Limites assumées
 
-- La coexposition structurelle ne décrit pas le bruit minute par minute.
+- Les statistiques de bruit très dégradé décrivent une exposition structurelle, pas le bruit minute par minute.
 - Le flux aérien direct ne décrit pas à lui seul l’exposition acoustique.
 - Le trafic routier direct n’est pas superposé : sans composition des véhicules, vitesse, revêtement, météorologie et propagation, sa transformation en niveau sonore serait trompeuse.
 - Les pourcentages communaux sont des estimations de population exposée, non des mesures individuelles.

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       name="description"
-      content="Cliquez n’importe où sur la carte du Val-d’Oise pour connaître le classement sonore routier et ferroviaire (arrêtés n°17-146 et n°16249), le bruit stratégique et la qualité de l’air à cet endroit."
+      content="Cliquez n’importe où sur la carte du Val-d’Oise pour connaître le classement sonore routier et ferroviaire (arrêtés n°17-146 et n°16249) et le bruit stratégique à cet endroit."
     />
     <title>Classement sonore routier et ferroviaire · Nuisances Val-d’Oise · DDT 95</title>
     <link rel="preconnect" href="https://tile.openstreetmap.org" />
@@ -32,8 +32,7 @@
         <h1>Quelles nuisances à cet endroit ?</h1>
         <p>
           Cliquez n’importe où sur la carte : bruit routier et ferroviaire
-          réglementaire, qualité de l’air, bruit aérien et observations en
-          direct du Val-d’Oise
+          réglementaire, bruit aérien et observations en direct du Val-d’Oise
         </p>
       </div>
       <button id="mobileLayers" class="mobile-layers">Données</button
@@ -138,18 +137,6 @@
                 </button>
               </div>
             </div>
-            <div class="layer-group">
-              <span>QUALITÉ DE L’AIR</span>
-              <div class="layer-cards">
-                <button class="layer-card" data-layer="air">
-                  <i class="layer-swatch air"></i
-                  ><span
-                    ><b>Population exposée</b
-                    ><small>Airparif–Bruitparif · statistique 2024</small></span
-                  ><i class="layer-switch"></i>
-                </button>
-              </div>
-            </div>
             <div class="live-heading">EN DIRECT</div>
             <div class="layer-group live-group">
               <span>EN DIRECT</span>
@@ -169,28 +156,6 @@
                     ><small id="aircraftMenuStatus"
                       >Positions et altitudes ADS-B</small
                     ></span
-                  ><i class="layer-switch"></i></button
-                ><button class="layer-card" data-layer="liveAir">
-                  <span class="live-pulse air-dot"></span
-                  ><span
-                    ><b>Qualité de l’air aujourd’hui</b
-                    ><small id="liveAirStatus"
-                      >Indice ATMO · chargement…</small
-                    ></span
-                  ><i class="layer-switch"></i>
-                </button>
-              </div>
-            </div>
-            <div class="layer-group">
-              <span>REPÈRES</span>
-              <div class="layer-cards">
-                <button class="layer-card active" data-layer="communes">
-                  <i class="layer-swatch commune"></i
-                  ><span
-                    ><b>Limites communales et portraits</b
-                    ><small
-                      >183 territoires · cliquez pour les données</small
-                    ></span
                   ><i class="layer-switch"></i>
                 </button>
               </div>
@@ -204,10 +169,7 @@
           <span class="fresh-dot"></span>
           <div>
             <strong>Données publiques vérifiées</strong
-            ><small
-              >DDT 95 · Bruitparif · Airparif · Atmo France · Sytadin ·
-              ADSB.lol</small
-            >
+            ><small>DDT 95 · Bruitparif · Sytadin · ADSB.lol</small>
           </div>
         </div>
       </aside>
@@ -296,19 +258,6 @@
           Altitude, vitesse et type sont affichés lorsqu’ils sont transmis. Le
           signal de proximité n’est pas un niveau acoustique.
         </p>
-        <h3>Airparif</h3>
-        <p>
-          Statistiques communales 2024 de la cartographie Airparif–Bruitparif.
-          Une valeur de 0 % signifie qu’aucun habitant n’est classé dans la
-          catégorie « air très dégradé » retenue ici ; elle ne signifie jamais «
-          aucune pollution ».
-        </p>
-        <h3>Air aujourd’hui</h3>
-        <p>
-          Indice ATMO quotidien par commune, diffusé en open data par Atmo
-          France et produit en Île-de-France par Airparif. Il agrège NO₂, O₃,
-          PM10, PM2,5 et SO₂ et est renouvelé chaque jour.
-        </p>
         <h3>Trafic routier direct</h3>
         <p>
           Sytadin est le service de la DiRIF pour les grands axes franciliens.
@@ -332,11 +281,11 @@
         </div>
       </div>
     </dialog>
-    <link rel="stylesheet" href="css/fixes.css?v=6" />
+    <link rel="stylesheet" href="css/fixes.css?v=7" />
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="js/app.js?v=9"></script>
+    <script src="js/app.js?v=10"></script>
   </body>
 </html>
