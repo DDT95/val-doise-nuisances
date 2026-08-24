@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       name="description"
-      content="Vérifiez si un logement est dans un secteur affecté par le bruit routier (arrêté n°17-146), puis explorez les autres nuisances du Val-d’Oise."
+      content="Vérifiez si un logement est dans un secteur affecté par le bruit routier ou ferroviaire (arrêtés n°17-146 et n°16249), puis explorez les autres nuisances du Val-d’Oise."
     />
-    <title>Classement sonore routier · Nuisances Val-d’Oise · DDT 95</title>
+    <title>Classement sonore routier et ferroviaire · Nuisances Val-d’Oise · DDT 95</title>
     <link rel="preconnect" href="https://tile.openstreetmap.org" />
     <link
       rel="stylesheet"
@@ -28,11 +28,11 @@
           alt="Préfet du Val-d’Oise"
       /></a>
       <div class="title-block">
-        <span class="eyebrow">CLASSEMENT SONORE ROUTIER · ARRÊTÉ N°17-146</span>
+        <span class="eyebrow">CLASSEMENT SONORE ROUTIER ET FERROVIAIRE</span>
         <h1>Mon logement est-il dans un secteur affecté par le bruit ?</h1>
         <p>
-          Vérifiez une adresse, puis explorez le bruit ferroviaire et aérien,
-          la qualité de l’air et les observations en direct du Val-d’Oise
+          Vérifiez une adresse, puis explorez la qualité de l’air, le bruit
+          aérien et les observations en direct du Val-d’Oise
         </p>
       </div>
       <button id="mobileLayers" class="mobile-layers">Données</button
@@ -70,7 +70,7 @@
           ><button id="openData">Données & évolutions</button>
         </div>
         <div class="dwelling-check">
-          <span class="eyebrow">CLASSEMENT SONORE ROUTIER · ARRÊTÉ N°17-146</span>
+          <span class="eyebrow">CLASSEMENT SONORE ROUTIER ET FERROVIAIRE</span>
           <h2>Vérifier un logement</h2>
           <label class="search-box dwelling-box"
             ><span>Adresse</span>
@@ -95,22 +95,22 @@
               <button id="clearAll" type="button">Tout effacer</button>
             </div>
             <div class="layer-group">
-              <span>CLASSEMENT SONORE ROUTIER · ARRÊTÉ N°17-146</span>
+              <span>CLASSEMENT SONORE RÉGLEMENTAIRE</span>
               <div class="layer-cards">
-                <button class="layer-card active" data-layer="csLines">
+                <button class="layer-card active" data-layer="csRoad">
                   <i class="layer-swatch cs-line"></i
                   ><span
-                    ><b>Tronçons classés</b
-                    ><small id="csLinesStatus"
+                    ><b>Routier</b
+                    ><small id="csRoadStatus"
                       >Catégories 1 à 5 · arrêté n°17-146</small
                     ></span
                   ><i class="layer-switch"></i></button
-                ><button class="layer-card active" data-layer="csBuffer">
-                  <i class="layer-swatch cs-buffer"></i
+                ><button class="layer-card active" data-layer="csRail">
+                  <i class="layer-swatch cs-line"></i
                   ><span
-                    ><b>Secteurs affectés par le bruit</b
-                    ><small id="csBufferStatus"
-                      >Empreinte réglementaire</small
+                    ><b>Ferroviaire</b
+                    ><small id="csRailStatus"
+                      >SNCF, RATP, SGP · arrêté n°16249</small
                     ></span
                   ><i class="layer-switch"></i>
                 </button>
@@ -267,21 +267,37 @@
           nocturne Ln, 2017. Classes de 40 à 75 dB(A). Les axes sont nommés avec
           OpenStreetMap.
         </p>
-        <h3>Classement sonore routier</h3>
+        <h3>Classement sonore routier et ferroviaire</h3>
         <p>
-          DDT 95, classement sonore des infrastructures routières et son
-          empreinte sonore (arrêté préfectoral n°17-146). Les flux WFS publiés
-          sur data.gouv.fr sont resynchronisés une fois par jour par une
-          action GitHub et publiés en GeoJSON dans ce dépôt — un appel direct
-          depuis le navigateur n’est pas possible, ce service de l’État ne
-          renvoyant pas d’en-tête CORS. Catégorie 1 = secteur affecté de 300 m
-          (le plus sévère), catégorie 5 = 10 m. La vérification « au logement
-          » compare le point choisi à la distance réglementaire (« es ») de
-          chaque tronçon classé, sans la demi-largeur de chaussée : c’est une
-          lecture indicative, pas un certificat d’exposition. Le bruit
-          ferroviaire et aérien n’y figurent pas. Si la synchronisation
-          échoue, les couches et la vérification l’indiquent au lieu
-          d’afficher une valeur inventée ou périmée.
+          DDT 95, classement sonore des infrastructures routières (arrêté
+          préfectoral n°17-146) et ferroviaires SNCF, RATP et Société du
+          Grand Paris (arrêté préfectoral n°16249), avec leurs empreintes
+          sonores. Les flux WFS publiés sur data.gouv.fr sont resynchronisés
+          une fois par jour par une action GitHub et publiés en GeoJSON dans
+          ce dépôt — un appel direct depuis le navigateur n’est pas possible,
+          ce service de l’État ne renvoyant pas d’en-tête CORS.
+        </p>
+        <p>
+          Les 5 catégories partagent la même largeur de secteur affecté
+          quel que soit le mode (arrêté du 30 mai 1996, art. 3) : catégorie 1
+          = 300 m (la plus sévère), 2 = 250 m, 3 = 100 m, 4 = 30 m, 5 = 10 m.
+          Pour le routier, ces catégories correspondent à des niveaux sonores
+          de référence LAeq publiés dans l’arrêté n°17-146 (catégorie 1 :
+          jour &gt; 81 dB(A), nuit &gt; 76 dB(A) ; catégorie 5 : jour 60 à
+          65 dB(A), nuit 55 à 60 dB(A)). Dans un secteur affecté, toute
+          construction neuve à usage sensible (habitation, enseignement,
+          santé, hôtellerie) doit respecter un isolement acoustique renforcé,
+          calculé selon la méthode forfaitaire de l’arrêté du 30 mai 1996 :
+          plus la catégorie est basse, plus l’isolement exigé est important.
+        </p>
+        <p>
+          La vérification « au logement » compare le point choisi à la
+          distance réglementaire (« es »/« tampon ») de chaque tronçon
+          classé le plus proche, route ou rail, sans la demi-largeur de
+          chaussée ou de voie : c’est une lecture indicative, pas un
+          certificat d’exposition. Le bruit aérien n’y figure pas. Si la
+          synchronisation échoue, les couches et la vérification l’indiquent
+          au lieu d’afficher une valeur inventée ou périmée.
         </p>
         <h3>Bruit ferroviaire</h3>
         <p>
@@ -331,11 +347,11 @@
         </div>
       </div>
     </dialog>
-    <link rel="stylesheet" href="css/fixes.css?v=4" />
+    <link rel="stylesheet" href="css/fixes.css?v=5" />
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="js/app.js?v=7"></script>
+    <script src="js/app.js?v=8"></script>
   </body>
 </html>

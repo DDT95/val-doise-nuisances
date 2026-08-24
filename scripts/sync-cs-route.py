@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Synchronise les couches du classement sonore routier (arrêté n°17-146)
-depuis les flux WFS publiés par la DDT du Val-d'Oise sur data.gouv.fr.
+"""Synchronise les couches du classement sonore routier (arrêté n°17-146) et
+ferroviaire (arrêté n°16249) depuis les flux WFS publiés par la DDT du
+Val-d'Oise sur data.gouv.fr.
 
 Exécuté côté serveur (GitHub Actions) car ces services WFS ne renvoient pas
 d'en-tête CORS et ne peuvent donc pas être appelés depuis un navigateur.
@@ -17,15 +18,21 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
+
+def _wfs(map_id):
+    base = f"https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/{map_id}.internet.map"
+    return {"capabilities": f"{base}&SERVICE=WFS&REQUEST=GetCapabilities", "base": base}
+
+
 SOURCES = {
-    "data/cs-lines.geojson": {
-        "capabilities": "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/8adeaaa4-6d6a-4f32-b53c-30b8a3eee9af.internet.map&SERVICE=WFS&REQUEST=GetCapabilities",
-        "base": "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/8adeaaa4-6d6a-4f32-b53c-30b8a3eee9af.internet.map",
-    },
-    "data/cs-buffer.geojson": {
-        "capabilities": "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/5e133a97-f7ac-4c8b-91ad-eb81023cd863.internet.map&SERVICE=WFS&REQUEST=GetCapabilities",
-        "base": "https://ogc.geo-ide.developpement-durable.gouv.fr/wxs?map=/opt/data/stack/mapfiles/1.4/org_38124/5e133a97-f7ac-4c8b-91ad-eb81023cd863.internet.map",
-    },
+    "data/cs-lines.geojson": _wfs("8adeaaa4-6d6a-4f32-b53c-30b8a3eee9af"),
+    "data/cs-buffer.geojson": _wfs("5e133a97-f7ac-4c8b-91ad-eb81023cd863"),
+    "data/cs-rail-sncf-lines.geojson": _wfs("10ae6ec4-0108-477a-804f-48e6218780b2"),
+    "data/cs-rail-sncf-buffer.geojson": _wfs("eddc3d7c-3912-4c48-b1ba-5f5187fd9364"),
+    "data/cs-rail-ratp-lines.geojson": _wfs("85838f81-b9d0-4290-b005-0040d2e0b5bb"),
+    "data/cs-rail-ratp-buffer.geojson": _wfs("242b75bd-8ffb-4604-9ea7-f6e73aca58da"),
+    "data/cs-rail-sgp-lines.geojson": _wfs("cd577140-1f8c-4fd0-9bc2-ea9de788baaf"),
+    "data/cs-rail-sgp-buffer.geojson": _wfs("a04d96c8-9a23-4e72-a966-61458752c998"),
 }
 
 GML_OUTPUT_FORMAT = "application/gml+xml; version=3.2"

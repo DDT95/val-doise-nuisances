@@ -21,7 +21,7 @@ const bounds = [
   state = {
     layers: {},
     stats: {},
-    active: new Set(["roadNoise", "roads", "communes", "csLines", "csBuffer"]),
+    active: new Set(["roadNoise", "roads", "communes", "csRoad", "csRail"]),
     data: {},
   };
 function openDetail(html) {
@@ -218,7 +218,7 @@ function showRail(p) {
     `<span class="detail-tag">INFRASTRUCTURE FERROVIAIRE</span><h2>${esc(p.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>Référence</small><strong>${esc(p.ref || "—")}</strong></div><div class="kpi-tile warn"><small>Type</small><strong>Voie ferrée</strong></div></div><h3>Lecture</h3><p>Activez « Niveaux sonores ferroviaires » pour afficher les secteurs exposés à partir de 55 dB(A) Lden autour du réseau.</p>`,
   );
 }
-// --- Classement sonore routier (arrêté n°17-146) ---
+// --- Classement sonore routier (arrêté n°17-146) et ferroviaire (arrêté n°16249) ---
 // Les couches sont synchronisées côté serveur (GitHub Actions, voir
 // .github/workflows/sync-cs-route.yml) car le WFS de la DDT 95 ne renvoie
 // pas d'en-tête CORS et ne peut donc pas être appelé depuis le navigateur.
@@ -245,72 +245,147 @@ function csCategoryColor(cat) {
             ? "#ffe05b"
             : "#8a97a8";
 }
-function showCsRoute(props) {
-  const name = esc(getProp(props, "name", "nom") ?? "Tronçon sans nom");
-  const cat = esc(getProp(props, "categorie", "categ") ?? "—");
-  const es = getProp(props, "es");
+// Largeurs de secteur communes à tous les modes (arrêté du 30 mai 1996, art. 3) ;
+// les niveaux de référence dB(A) ci-dessous sont ceux publiés pour le routier
+// (arrêté n°17-146, art. 2) — non confirmés à l’identique pour le ferroviaire.
+const CATEGORY_INFO = {
+  1: { width: 300, day: "> 81 dB(A)", night: "> 76 dB(A)" },
+  2: { width: 250, day: "76 à 81 dB(A)", night: "71 à 76 dB(A)" },
+  3: { width: 100, day: "70 à 76 dB(A)", night: "65 à 71 dB(A)" },
+  4: { width: 30, day: "65 à 70 dB(A)", night: "60 à 65 dB(A)" },
+  5: { width: 10, day: "60 à 65 dB(A)", night: "55 à 60 dB(A)" },
+};
+function categoryLegendNote(roadCat, railCat) {
+  const parts = [];
+  if (CATEGORY_INFO[roadCat])
+    parts.push(
+      `Catégorie ${roadCat} routière (arrêté n°17-146) : référence diurne ${CATEGORY_INFO[roadCat].day}, nocturne ${CATEGORY_INFO[roadCat].night}, secteur de ${CATEGORY_INFO[roadCat].width} m.`,
+    );
+  if (CATEGORY_INFO[railCat])
+    parts.push(
+      `Catégorie ${railCat} ferroviaire (arrêté n°16249) : secteur de ${CATEGORY_INFO[railCat].width} m.`,
+    );
+  if (!parts.length) return "";
+  return `<p class="flag-note">${parts.join(" ")} Plus la catégorie est basse (1 = la plus sévère), plus l’isolement acoustique exigé pour une construction neuve y est renforcé (méthode forfaitaire, arrêté du 30 mai 1996).</p>`;
+}
+function showCsFeature(props, mode) {
+  const isRoad = mode === "road";
+  const name = esc(
+    getProp(props, "name", "nom", "codeligne", "ligneratp") ?? "Tronçon sans nom",
+  );
+  const catRaw = getProp(props, "categorie");
+  const cat = esc(catRaw ?? "—");
+  const es = getProp(props, "es", "tampon");
   const communes = getProp(props, "insee_com", "communes");
+  const operator = getProp(props, "_operator");
   openDetail(
-    `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h2>${name}</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Catégorie</small><strong>${cat}</strong></div><div class="kpi-tile"><small>Secteur affecté</small><strong>${es ? esc(es) + " m" : "—"}</strong></div></div>${communes ? `<p><strong>Communes concernées :</strong> ${esc(Array.isArray(communes) ? communes.join(", ") : communes)}</p>` : ""}<p class="flag-note">Classement issu de l’arrêté préfectoral n°17-146. Catégorie 1 = la plus sévère (secteur de 300 m), catégorie 5 = la moins sévère (10 m).</p>`,
+    `<span class="detail-tag">CLASSEMENT SONORE${operator ? " · " + esc(operator) : ""}</span><h2>${name}</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Catégorie</small><strong>${cat}</strong></div><div class="kpi-tile"><small>Secteur affecté</small><strong>${es ? esc(es) + " m" : "—"}</strong></div></div>${communes ? `<p><strong>Communes concernées :</strong> ${esc(Array.isArray(communes) ? communes.join(", ") : communes)}</p>` : ""}${categoryLegendNote(isRoad ? catRaw : null, isRoad ? null : catRaw)}<p class="flag-note">Classement issu de l’arrêté préfectoral ${isRoad ? "n°17-146 (routier)" : "n°16249 (ferroviaire)"}.</p>`,
   );
 }
-state.layers.csLines = L.geoJSON(null, {
-  pane: "network",
-  style: (f) => ({
-    color: csCategoryColor(getProp(f.properties, "categorie")),
-    weight: 3,
-    opacity: 0.9,
-  }),
-  onEachFeature: (f, l) =>
-    l
-      .bindTooltip(
-        `<strong>${esc(getProp(f.properties, "name", "nom") ?? "Tronçon")}</strong> · catégorie ${esc(getProp(f.properties, "categorie") ?? "—")}`,
+function csLineLayer(mode, operator) {
+  return L.geoJSON(null, {
+    pane: "network",
+    style: (f) => ({
+      color: csCategoryColor(getProp(f.properties, "categorie")),
+      weight: 3,
+      opacity: 0.9,
+      dashArray: mode === "rail" ? "1 6" : null,
+    }),
+    onEachFeature: (f, l) => {
+      if (operator) f.properties._operator = operator;
+      l.bindTooltip(
+        `<strong>${esc(getProp(f.properties, "name", "nom", "codeligne", "ligneratp") ?? "Tronçon")}</strong> · catégorie ${esc(getProp(f.properties, "categorie") ?? "—")}`,
         { sticky: true },
-      )
-      .on("click", () => showCsRoute(f.properties)),
-}).addTo(map);
-state.layers.csBuffer = L.geoJSON(null, {
-  pane: "noise",
-  style: () => ({
-    color: "#8a97a8",
-    weight: 1,
-    fillColor: "#8a97a8",
-    fillOpacity: 0.28,
-  }),
-}).addTo(map);
+      ).on("click", () => showCsFeature(f.properties, mode));
+    },
+  });
+}
+function csBufferLayer() {
+  return L.geoJSON(null, {
+    pane: "noise",
+    style: () => ({
+      color: "#8a97a8",
+      weight: 1,
+      fillColor: "#8a97a8",
+      fillOpacity: 0.28,
+    }),
+  });
+}
+state.layers.csRoadLines = csLineLayer("road");
+state.layers.csRoadBuffer = csBufferLayer();
+state.layers.csRoad = L.layerGroup([
+  state.layers.csRoadLines,
+  state.layers.csRoadBuffer,
+]).addTo(map);
+const RAIL_OPERATORS = [
+  { key: "sncf", label: "SNCF" },
+  { key: "ratp", label: "RATP" },
+  { key: "sgp", label: "SGP" },
+];
+const csRailSub = [];
+for (const op of RAIL_OPERATORS) {
+  op.linesLayer = csLineLayer("rail", op.label);
+  op.bufferLayer = csBufferLayer();
+  csRailSub.push(op.linesLayer, op.bufferLayer);
+}
+state.layers.csRail = L.layerGroup(csRailSub).addTo(map);
+async function fetchGeoJSON(file) {
+  const res = await fetch(`data/${file}?v=${Date.now()}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
+}
 async function loadCsRoute() {
-  $("csLinesStatus").textContent = "Chargement…";
-  $("csBufferStatus").textContent = "Chargement…";
-  const [linesResult, bufferResult] = await Promise.allSettled([
-    fetch(`data/cs-lines.geojson?v=${Date.now()}`, { cache: "no-store" }).then(
-      (r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status))),
-    ),
-    fetch(`data/cs-buffer.geojson?v=${Date.now()}`, {
-      cache: "no-store",
-    }).then((r) => (r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))),
+  $("csRoadStatus").textContent = "Chargement…";
+  $("csRailStatus").textContent = "Chargement…";
+  const [roadLines, roadBuffer, ...railResults] = await Promise.allSettled([
+    fetchGeoJSON("cs-lines.geojson"),
+    fetchGeoJSON("cs-buffer.geojson"),
+    ...RAIL_OPERATORS.flatMap((op) => [
+      fetchGeoJSON(`cs-rail-${op.key}-lines.geojson`),
+      fetchGeoJSON(`cs-rail-${op.key}-buffer.geojson`),
+    ]),
   ]);
-  if (linesResult.status === "fulfilled" && linesResult.value.features.length) {
-    state.data.csLines = linesResult.value;
-    state.layers.csLines.addData(linesResult.value);
-    $("csLinesStatus").textContent =
-      `${linesResult.value.features.length} tronçons classés · arrêté n°17-146`;
-  } else {
-    $("csLinesStatus").textContent = "Synchronisation en cours, réessayez plus tard";
-    if (linesResult.status === "rejected")
-      console.warn("CS Route (lignes) indisponible :", linesResult.reason);
+  if (roadLines.status === "fulfilled" && roadLines.value.features.length) {
+    state.data.csRoadLines = roadLines.value;
+    state.layers.csRoadLines.addData(roadLines.value);
+  } else if (roadLines.status === "rejected") {
+    console.warn("CS Route routier (lignes) indisponible :", roadLines.reason);
   }
-  if (bufferResult.status === "fulfilled" && bufferResult.value.features.length) {
-    state.data.csBuffer = bufferResult.value;
-    state.layers.csBuffer.addData(bufferResult.value);
-    $("csBufferStatus").textContent = "Empreinte réglementaire chargée";
+  if (roadBuffer.status === "fulfilled" && roadBuffer.value.features.length) {
+    state.layers.csRoadBuffer.addData(roadBuffer.value);
+  } else if (roadBuffer.status === "rejected") {
+    console.warn("CS Route routier (empreinte) indisponible :", roadBuffer.reason);
+  }
+  $("csRoadStatus").textContent = state.data.csRoadLines
+    ? `${state.data.csRoadLines.features.length} tronçons classés · arrêté n°17-146`
+    : "Synchronisation en cours, réessayez plus tard";
+  const railFeatures = [];
+  RAIL_OPERATORS.forEach((op, i) => {
+    const linesResult = railResults[i * 2];
+    const bufferResult = railResults[i * 2 + 1];
+    if (linesResult.status === "fulfilled" && linesResult.value.features.length) {
+      linesResult.value.features.forEach((f) => (f.properties._operator = op.label));
+      railFeatures.push(...linesResult.value.features);
+      op.linesLayer.addData(linesResult.value);
+    } else if (linesResult.status === "rejected") {
+      console.warn(`CS Rail ${op.label} (lignes) indisponible :`, linesResult.reason);
+    }
+    if (bufferResult.status === "fulfilled" && bufferResult.value.features.length) {
+      op.bufferLayer.addData(bufferResult.value);
+    } else if (bufferResult.status === "rejected") {
+      console.warn(`CS Rail ${op.label} (empreinte) indisponible :`, bufferResult.reason);
+    }
+  });
+  if (railFeatures.length) {
+    state.data.csRailLines = { type: "FeatureCollection", features: railFeatures };
+    $("csRailStatus").textContent =
+      `${railFeatures.length} tronçons classés (SNCF/RATP/SGP) · arrêté n°16249`;
   } else {
-    $("csBufferStatus").textContent = "Synchronisation en cours, réessayez plus tard";
-    if (bufferResult.status === "rejected")
-      console.warn("CS Route (empreinte) indisponible :", bufferResult.reason);
+    $("csRailStatus").textContent = "Synchronisation en cours, réessayez plus tard";
   }
 }
 loadCsRoute();
-// --- Vérifier un logement : géocodage BAN + distance au tronçon classé le plus proche ---
+// --- Vérifier un logement : géocodage BAN + nuisances sonores au point ---
 function distPointToSegment(px, py, ax, ay, bx, by) {
   const dx = bx - ax,
     dy = by - ay,
@@ -339,24 +414,11 @@ function distToLineFeature(lon, lat, geometry) {
     }
   return min;
 }
-function checkDwelling(lon, lat, label) {
-  if (state.layers.dwellingMarker) map.removeLayer(state.layers.dwellingMarker);
-  state.layers.dwellingMarker = L.marker([lat, lon]).addTo(map);
-  if (label) state.layers.dwellingMarker.bindPopup(esc(label)).openPopup();
-  map.setView([lat, lon], 16);
-  const addressLine = label
-    ? `<p><strong>Adresse recherchée :</strong> ${esc(label)}</p>`
-    : "";
-  const lines = state.data.csLines;
-  if (!lines) {
-    openDetail(
-      `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h2>Service indisponible</h2>${addressLine}<p class="flag-note">Le service de classement sonore n’a pas pu être chargé. Réessayez dans quelques instants, ou consultez directement l’arrêté préfectoral n°17-146.</p>`,
-    );
-    return;
-  }
+function regulatoryMatches(lon, lat, geojson) {
+  if (!geojson) return [];
   const matches = [];
-  for (const f of lines.features) {
-    const es = Number(getProp(f.properties, "es"));
+  for (const f of geojson.features) {
+    const es = Number(getProp(f.properties, "es", "tampon"));
     if (!es || !f.geometry) continue;
     if (distToLineFeature(lon, lat, f.geometry) <= es)
       matches.push({
@@ -364,23 +426,58 @@ function checkDwelling(lon, lat, label) {
         cat: Number(getProp(f.properties, "categorie")) || 9,
       });
   }
-  if (!matches.length) {
-    openDetail(
-      `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h2>Hors secteur classé</h2>${addressLine}<p>Aucun tronçon classé ne place ce point dans un secteur affecté par le bruit routier, d’après l’arrêté n°17-146.</p><p class="flag-note">Vérification indicative : géométrie officielle simplifiée, sans la demi-largeur de chaussée. Le bruit ferroviaire ou aérien n’est pas couvert ici.</p>`,
-    );
-    return;
+  return matches.sort((a, b) => a.cat - b.cat);
+}
+function matchTile(m) {
+  const name = esc(
+    getProp(m.props, "name", "nom", "codeligne", "ligneratp") ?? "Tronçon",
+  );
+  const operator = getProp(m.props, "_operator");
+  const cat = esc(getProp(m.props, "categorie") ?? "—");
+  const width = esc(getProp(m.props, "es", "tampon") ?? "—");
+  return `<div class="kpi-tile warn"><small>${operator ? esc(operator) + " · " : ""}${name}</small><strong>Catégorie ${cat}</strong><em>Secteur ${width} m</em></div>`;
+}
+function checkDwelling(lon, lat, label) {
+  if (state.layers.dwellingMarker) map.removeLayer(state.layers.dwellingMarker);
+  state.layers.dwellingMarker = L.marker([lat, lon]).addTo(map);
+  if (label) state.layers.dwellingMarker.bindPopup(esc(label)).openPopup();
+  map.setView([lat, lon], 16);
+  const addressLine = label
+    ? `<p><strong>Point vérifié :</strong> ${esc(label)}</p>`
+    : "";
+  const roadReady = !!state.data.csRoadLines,
+    railReady = !!state.data.csRailLines;
+  const road = regulatoryMatches(lon, lat, state.data.csRoadLines);
+  const rail = regulatoryMatches(lon, lat, state.data.csRailLines);
+  const hasMatch = road.length || rail.length;
+  const latlng = L.latLng(lat, lon);
+  const roadDb = sampleNoise("roadNoise", latlng);
+  const railDb = sampleNoise("railNoise", latlng);
+
+  let regHtml;
+  if (!roadReady && !railReady) {
+    regHtml = `<p class="flag-note">Le service de classement sonore n’a pas pu être chargé. Réessayez dans quelques instants.</p>`;
+  } else if (hasMatch) {
+    regHtml =
+      `<div class="kpi-grid">${[...road.slice(0, 2), ...rail.slice(0, 2)].map(matchTile).join("")}</div>` +
+      categoryLegendNote(road[0]?.cat, rail[0]?.cat);
+  } else {
+    regHtml = `<p>Aucun tronçon routier (arrêté n°17-146) ou ferroviaire (arrêté n°16249) classé ne place ce point dans un secteur affecté par le bruit.</p>`;
   }
-  matches.sort((a, b) => a.cat - b.cat);
+  const noiseHtml =
+    roadDb || railDb
+      ? `<h3>Niveau sonore stratégique modélisé</h3><div class="kpi-grid">${
+          roadDb
+            ? `<div class="kpi-tile"><small>Routier · Ln</small><strong>${roadDb} à ${roadDb + 5} dB(A)</strong></div>`
+            : ""
+        }${
+          railDb
+            ? `<div class="kpi-tile"><small>Ferroviaire · Lden</small><strong>${railDb} à ${railDb + 5} dB(A)</strong></div>`
+            : ""
+        }</div>`
+      : "";
   openDetail(
-    `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h2>Dans un secteur affecté</h2>${addressLine}<div class="kpi-grid">${matches
-      .slice(0, 4)
-      .map(
-        (m) =>
-          `<div class="kpi-tile warn"><small>${esc(getProp(m.props, "name", "nom") ?? "Tronçon")}</small><strong>Catégorie ${esc(getProp(m.props, "categorie") ?? "—")}</strong><em>Secteur ${esc(getProp(m.props, "es") ?? "—")} m</em></div>`,
-      )
-      .join(
-        "",
-      )}</div><p class="flag-note">Vérification indicative à partir de la géométrie officielle (arrêté n°17-146), sans la demi-largeur de chaussée. En cas de doute (isolement acoustique, permis de construire…), consultez le service instructeur de la DDT 95.</p>`,
+    `<span class="detail-tag">NUISANCES SONORES · CE POINT</span><h2>${hasMatch ? "Dans un secteur affecté" : "Hors secteur classé"}</h2>${addressLine}${regHtml}${noiseHtml}<p class="flag-note">Vérification indicative à partir des géométries officielles, sans la demi-largeur de chaussée ou de voie. Le bruit aérien n’est pas couvert ici. En cas de doute (isolement acoustique, permis de construire…), consultez le service instructeur de la DDT 95.</p>`,
   );
 }
 let dwellingHits = [],
@@ -432,14 +529,6 @@ $("dwellingPick").onclick = () => {
     : "Cliquer un point sur la carte";
   map.getContainer().style.cursor = pickMode ? "crosshair" : "";
 };
-map.on("click", (e) => {
-  if (!pickMode) return;
-  pickMode = false;
-  $("dwellingPick").classList.remove("active");
-  $("dwellingPick").textContent = "Cliquer un point sur la carte";
-  map.getContainer().style.cursor = "";
-  checkDwelling(e.latlng.lng, e.latlng.lat, null);
-});
 function showCommune(code) {
   const s = state.stats[code];
   if (!s) return;
@@ -476,6 +565,14 @@ function sampleNoise(key, latlng) {
   )[0][3];
 }
 map.on("click", (e) => {
+  if (pickMode) {
+    pickMode = false;
+    $("dwellingPick").classList.remove("active");
+    $("dwellingPick").textContent = "Cliquer un point sur la carte";
+    map.getContainer().style.cursor = "";
+    checkDwelling(e.latlng.lng, e.latlng.lat, null);
+    return;
+  }
   for (const key of ["roadNoise", "railNoise"]) {
     if (!state.active.has(key)) continue;
     const v = sampleNoise(key, e.latlng);
@@ -780,13 +877,13 @@ function updateLegend() {
     parts.push(
       '<span><i class="noise-ramp"></i>Bruit ferroviaire · Lden 55–75 dB(A)</span>',
     );
-  if (state.active.has("csLines"))
+  if (state.active.has("csRoad"))
     parts.push(
-      '<span><i class="cs-line-swatch"></i>Tronçons classés (1 à 5)</span>',
+      '<span><i class="cs-line-swatch"></i>Classement sonore routier (1 à 5)</span>',
     );
-  if (state.active.has("csBuffer"))
+  if (state.active.has("csRail"))
     parts.push(
-      '<span><i class="cs-buffer-swatch"></i>Secteurs affectés par le bruit</span>',
+      '<span><i class="cs-line-swatch"></i>Classement sonore ferroviaire (1 à 5)</span>',
     );
   if (state.active.has("roads"))
     parts.push('<span><i class="road-line"></i>Axes routiers</span>');

@@ -366,21 +366,9 @@
 .cs-line {
   background: linear-gradient(135deg, #ffe05b, #691635);
 }
-.cs-buffer {
-  background: #8a97a8;
-  opacity: 0.55;
-}
 .cs-line-swatch {
   display: inline-block;
   width: 28px;
   height: 4px;
   background: linear-gradient(90deg, #ffe05b, #691635);
-}
-.cs-buffer-swatch {
-  display: inline-block;
-  width: 28px;
-  height: 10px;
-  border-radius: 3px;
-  background: #8a97a8;
-  opacity: 0.55;
 }

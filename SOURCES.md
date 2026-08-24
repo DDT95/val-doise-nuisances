@@ -9,35 +9,53 @@
 
 Les couches sont rasterisées à 100 mètres pour la consultation web. La valeur de classe reste interrogeable sur la carte. Les routes principales et voies ferrées nommées proviennent d’OpenStreetMap, extraction du 16 août 2026, ODbL.
 
-## Classement sonore routier (arrêté préfectoral n°17-146)
+## Classement sonore routier (arrêté préfectoral n°17-146) et ferroviaire (arrêté préfectoral n°16249)
 
-- Tronçons classés : https://www.data.gouv.fr/datasets/classement-sonore-des-infrastructures-routieres-3
-- Empreinte sonore (secteurs affectés par le bruit) : https://www.data.gouv.fr/datasets/empreinte-sonore-du-classement-des-infrastructures-routieres
+- Tronçons routiers classés : https://www.data.gouv.fr/datasets/classement-sonore-des-infrastructures-routieres-3
+- Empreinte sonore routière : https://www.data.gouv.fr/datasets/empreinte-sonore-du-classement-des-infrastructures-routieres
+- Tronçons ferroviaires classés et empreintes, par exploitant : SNCF, RATP, Société du Grand Paris (jeux « Classement sonore des infrastructures ferroviaires (SNCF/RATP/SGP) » et « Empreinte sonore … » correspondants sur data.gouv.fr).
 - Producteur et diffuseur : DDT du Val-d'Oise.
 - Licence : Licence Ouverte 2.0.
 
-Ces deux couches sont synchronisées une fois par jour par une action GitHub
+Ces huit couches (2 routières + 3 exploitants ferroviaires × 2) sont
+synchronisées une fois par jour par une action GitHub
 (`.github/workflows/sync-cs-route.yml`, script `scripts/sync-cs-route.py`),
 sur le même principe que les flux Sytadin/ADS-B/Airparif de ce dépôt : le
 serveur appelle `GetCapabilities` pour découvrir le nom technique de chaque
 couche puis `GetFeature` en sortie GeoJSON, et le résultat est commité dans
-`data/cs-lines.geojson` et `data/cs-buffer.geojson`. Cet appel ne peut pas se
-faire directement depuis le navigateur des visiteurs : le WFS de la DDT 95 ne
-renvoie pas d'en-tête CORS (`Access-Control-Allow-Origin`), une tentative
-d'appel client a échoué en pratique avant ce choix d'architecture. Si la
-synchronisation échoue, le site l'indique au lieu d'afficher une donnée
-périmée ou inventée.
+`data/cs-*.geojson`. Cet appel ne peut pas se faire directement depuis le
+navigateur des visiteurs : le WFS de la DDT 95 ne renvoie pas d'en-tête CORS
+(`Access-Control-Allow-Origin`), une tentative d'appel client a échoué en
+pratique avant ce choix d'architecture. Si la synchronisation échoue, le
+site l'indique au lieu d'afficher une donnée périmée ou inventée.
+
+Les cinq catégories du classement sonore partagent la même largeur de
+secteur affecté quel que soit le mode de transport (arrêté du 30 mai 1996,
+art. 3) : 1 = 300 m, 2 = 250 m, 3 = 100 m, 4 = 30 m, 5 = 10 m. Pour le
+routier, l'arrêté n°17-146 publie en plus les niveaux sonores de référence
+LAeq associés à chaque catégorie (ex. catégorie 1 : jour > 81 dB(A), nuit
+> 76 dB(A)) ; ces valeurs précises n'ont pas été confirmées à l'identique
+pour le ferroviaire à partir des sources consultées, donc le site n'affiche
+que la largeur de secteur pour ce mode. Dans un secteur affecté, toute
+construction neuve à usage sensible (habitation, enseignement, santé,
+hôtellerie) doit respecter un isolement acoustique renforcé, calculé selon
+la méthode forfaitaire de l'arrêté du 30 mai 1996 (catégorie 1 = isolement
+le plus renforcé).
 
 Le widget « Vérifier un logement » géocode l'adresse saisie via l'API Adresse
 nationale (https://api-adresse.data.gouv.fr/, sans clé, licence ouverte), puis
-calcule la distance du point à chaque tronçon classé et la compare à la
-largeur réglementaire du secteur affecté (colonne « es », identique à la
-colonne « Secteur (m) » de l'annexe 3 de l'arrêté). C'est une lecture
-indicative : elle ignore la demi-largeur de la chaussée (quelques mètres,
-prévue par la méthodologie DDT 95 mais non reconstituable depuis les couches
-publiées) et ne couvre pas le bruit ferroviaire ni aérien. Pour toute
+calcule la distance du point au tronçon classé le plus proche (route et rail)
+et la compare à la largeur réglementaire du secteur affecté (colonne « es »
+côté route, « tampon » côté rail — identique à la colonne « Secteur (m) » de
+l'annexe 3 de l'arrêté routier). Il affiche aussi, quand elle est disponible,
+la classe de bruit modélisée par les cartes stratégiques (Ln routier, Lden
+ferroviaire) au même point, dans le même panneau. C'est une lecture
+indicative : elle ignore la demi-largeur de la chaussée ou de la voie
+(quelques mètres, prévue par la méthodologie DDT 95 mais non reconstituable
+depuis les couches publiées) et ne couvre pas le bruit aérien. Pour toute
 démarche réglementaire (isolement acoustique, permis de construire),
-consulter l'arrêté n°17-146 et le service instructeur de la DDT 95.
+consulter l'arrêté n°17-146 (routier), l'arrêté n°16249 (ferroviaire) et le
+service instructeur de la DDT 95.
 
 ## Circulation routière directe
 
