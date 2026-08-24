@@ -179,7 +179,8 @@ def fix_axis_order(geojson):
 
 
 PAGE_SIZE = 300
-MAX_PAGES = 60  # garde-fou : jusqu'à 18 000 entités
+MAX_PAGES = 200  # garde-fou ; la couche SNCF lignes ne répond qu'avec des lots
+# de 1 entité (géométrie très dense), donc jusqu'à 200 tronçons pour ce cas
 
 
 def fetch_page(base, type_name, count, start_index):
