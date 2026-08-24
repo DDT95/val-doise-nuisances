@@ -251,34 +251,34 @@ const CATEGORY_INFO = {
 // Sévérité et conséquence en isolement, 1 = la plus sévère, 5 = la plus faible
 // des 5 catégories (échelle relative, pas une valeur dB d'isolement).
 const CATEGORY_SEVERITY = {
-  1: "la plus sévère des 5 catégories",
-  2: "sévérité élevée",
-  3: "sévérité modérée",
-  4: "sévérité faible",
-  5: "la plus faible des 5 catégories",
+  1: "la plus sévère (1/5)",
+  2: "élevée (2/5)",
+  3: "modérée (3/5)",
+  4: "faible (4/5)",
+  5: "la plus faible (5/5)",
 };
 const CATEGORY_ISOLATION = {
-  1: "l’isolement acoustique renforcé le plus exigeant (méthode forfaitaire)",
-  2: "un isolement acoustique renforcé élevé",
-  3: "un isolement acoustique renforcé modéré",
-  4: "un isolement acoustique renforcé limité",
-  5: "l’isolement acoustique renforcé le plus faible des 5 catégories",
+  1: "le plus exigeant",
+  2: "élevé",
+  3: "modéré",
+  4: "limité",
+  5: "le plus faible",
 };
 function categoryRow(cat, mode, arrete) {
   const info = CATEGORY_INFO[cat];
   if (!info) return "";
-  const refLevels =
-    mode === "routière"
-      ? ` Référence diurne ${info.day}, nocturne ${info.night}.`
-      : "";
-  return `<p class="flag-note-row"><span class="cat-chip" style="background:${csCategoryColor(cat)}">Cat. ${cat}</span><span><strong>Voie ${mode} (${arrete})</strong> — ${CATEGORY_SEVERITY[cat]}, secteur affecté de ${info.width} m de part et d’autre de la voie.${refLevels} Construction neuve à usage sensible (logement, école, santé…) dans cette bande : ${CATEGORY_ISOLATION[cat]}.</span></p>`;
+  const isRoad = mode === "routière";
+  const dbStats = isRoad
+    ? `<div><small>Jour</small><strong>${info.day}</strong></div><div><small>Nuit</small><strong>${info.night}</strong></div>`
+    : "";
+  return `<div class="cat-card"><div class="cat-card-head"><span class="cat-chip" style="background:${csCategoryColor(cat)}">${cat}</span><div><strong>Voie ${mode}</strong><small>${arrete}</small></div><span class="cat-severity">Sévérité ${CATEGORY_SEVERITY[cat]}</span></div><div class="cat-stats"><div${isRoad ? "" : ' class="cat-stat-wide"'}><small>Secteur affecté</small><strong>${info.width} m</strong></div>${dbStats}<div class="cat-stat-wide"><small>Isolement renforcé exigé pour une construction neuve</small><strong>${CATEGORY_ISOLATION[cat]}</strong></div></div></div>`;
 }
 function categoryLegendNote(roadCat, railCat) {
-  const rows =
+  const cards =
     categoryRow(roadCat, "routière", "arrêté n°17-146") +
     categoryRow(railCat, "ferroviaire", "arrêté n°16249");
-  if (!rows) return "";
-  return `<div class="flag-note">${rows}</div>`;
+  if (!cards) return "";
+  return `<div class="cat-cards">${cards}</div><p class="flag-note">Le secteur affecté s’étend de part et d’autre de la voie ; toute construction neuve à usage sensible (logement, école, santé…) qui s’y trouve doit respecter l’isolement acoustique renforcé indiqué (méthode forfaitaire, arrêté du 30 mai 1996). Plus la catégorie est basse, plus l’exigence est forte.</p>`;
 }
 function csLineLayer(mode, operator) {
   return L.geoJSON(null, {
@@ -429,6 +429,15 @@ function regulatoryMatches(lon, lat, geojson) {
   }
   return matches.sort((a, b) => a.cat - b.cat);
 }
+function dedupeMatches(matches) {
+  const seen = new Set();
+  return matches.filter((m) => {
+    const key = `${getProp(m.props, "_operator") ?? ""}·${getProp(m.props, "name", "nom", "codeligne", "ligneratp") ?? ""}·${m.cat}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 function matchTile(m) {
   const name = esc(
     getProp(m.props, "name", "nom", "codeligne", "ligneratp") ?? "Tronçon",
@@ -443,8 +452,8 @@ function showNuisancesAt(lon, lat) {
   state.layers.clickMarker = L.marker([lat, lon]).addTo(map);
   const roadReady = !!state.data.csRoadLines,
     railReady = !!state.data.csRailLines;
-  const road = regulatoryMatches(lon, lat, state.data.csRoadLines);
-  const rail = regulatoryMatches(lon, lat, state.data.csRailLines);
+  const road = dedupeMatches(regulatoryMatches(lon, lat, state.data.csRoadLines));
+  const rail = dedupeMatches(regulatoryMatches(lon, lat, state.data.csRailLines));
   const hasMatch = road.length || rail.length;
   const latlng = L.latLng(lat, lon);
   const roadDb = sampleNoise("roadNoise", latlng);
