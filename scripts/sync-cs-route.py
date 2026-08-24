@@ -138,14 +138,38 @@ def gml_to_geojson(raw_bytes):
     return {"type": "FeatureCollection", "features": features}
 
 
+PAGE_SIZE = 300
+MAX_PAGES = 60  # garde-fou : jusqu'à 18 000 entités
+
+
 def fetch_geojson(source):
     type_name = discover_type_name(source["capabilities"])
-    url = (
-        f"{source['base']}&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature"
-        f"&TYPENAMES={urllib.parse.quote(type_name)}"
-        f"&SRSNAME=EPSG:4326&OUTPUTFORMAT={urllib.parse.quote(GML_OUTPUT_FORMAT)}"
-    )
-    geojson = gml_to_geojson(fetch(url))
+    all_features = []
+    start_index = 0
+    for page in range(MAX_PAGES):
+        url = (
+            f"{source['base']}&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature"
+            f"&TYPENAMES={urllib.parse.quote(type_name)}"
+            f"&SRSNAME=EPSG:4326&OUTPUTFORMAT={urllib.parse.quote(GML_OUTPUT_FORMAT)}"
+            f"&COUNT={PAGE_SIZE}&STARTINDEX={start_index}"
+        )
+        raw = fetch(url)
+        if not raw.strip():
+            if page == 0:
+                raise RuntimeError(f"Réponse vide pour la couche {type_name}")
+            print(
+                f"::warning::{type_name} : page {page} vide, arrêt avec {len(all_features)} entités déjà récupérées"
+            )
+            break
+        page_features = gml_to_geojson(raw)["features"]
+        all_features.extend(page_features)
+        print(f"{type_name} : page {page} -> {len(page_features)} entités (total {len(all_features)})")
+        if len(page_features) < PAGE_SIZE:
+            break
+        start_index += PAGE_SIZE
+    else:
+        print(f"::warning::{type_name} : plafond de {MAX_PAGES} pages atteint, données potentiellement incomplètes")
+    geojson = {"type": "FeatureCollection", "features": all_features}
     if not geojson["features"]:
         raise RuntimeError(f"Aucune entité renvoyée pour la couche {type_name}")
     return geojson, type_name
