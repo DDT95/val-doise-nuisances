@@ -127,15 +127,48 @@ def gml_to_geojson(raw_bytes):
         feat_elem = feat_elems[0]
         props, geometry = {}, None
         for child in feat_elem:
-            geom_elem = child if local(child.tag) in GEOM_TAGS else next(
+            name = local(child.tag)
+            if name == "boundedBy":
+                continue
+            geom_elem = child if name in GEOM_TAGS else next(
                 (d for d in child.iter() if local(d.tag) in GEOM_TAGS), None
             )
             if geom_elem is not None:
                 geometry = geometry or geom_from_gml(geom_elem)
                 continue
-            props[local(child.tag)] = child.text
+            if len(child) == 0:  # élément simple porteur de texte, pas un conteneur
+                props[name] = child.text
         features.append({"type": "Feature", "properties": props, "geometry": geometry})
-    return {"type": "FeatureCollection", "features": features}
+    return fix_axis_order({"type": "FeatureCollection", "features": features})
+
+
+def first_coord(geometry):
+    if not geometry:
+        return None
+    c = geometry.get("coordinates")
+    while isinstance(c, list) and c and isinstance(c[0], list):
+        c = c[0]
+    return c if isinstance(c, list) and c and isinstance(c[0], (int, float)) else None
+
+
+def swap_coords(c):
+    return [c[1], c[0]] if isinstance(c[0], (int, float)) else [swap_coords(x) for x in c]
+
+
+def fix_axis_order(geojson):
+    """Le WFS 2.0.0 sert EPSG:4326 en ordre lat,lon strict (norme d'axes) ;
+    GeoJSON impose lon,lat, donc on permute si besoin."""
+    features = geojson.get("features") or []
+    if not features:
+        return geojson
+    coord = first_coord(features[0].get("geometry"))
+    if not coord or abs(coord[0]) <= 45:
+        return geojson
+    for f in features:
+        geom = f.get("geometry")
+        if geom and geom.get("coordinates") is not None:
+            geom["coordinates"] = swap_coords(geom["coordinates"])
+    return geojson
 
 
 PAGE_SIZE = 300
