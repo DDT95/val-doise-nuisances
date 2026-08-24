@@ -311,9 +311,6 @@ async function loadCsRoute() {
 }
 loadCsRoute();
 // --- Vérifier un logement : géocodage BAN + distance au tronçon classé le plus proche ---
-function renderDwellingResult(html) {
-  $("dwellingResult").innerHTML = html;
-}
 function distPointToSegment(px, py, ax, ay, bx, by) {
   const dx = bx - ax,
     dy = by - ay,
@@ -347,10 +344,13 @@ function checkDwelling(lon, lat, label) {
   state.layers.dwellingMarker = L.marker([lat, lon]).addTo(map);
   if (label) state.layers.dwellingMarker.bindPopup(esc(label)).openPopup();
   map.setView([lat, lon], 16);
+  const addressLine = label
+    ? `<p><strong>Adresse recherchée :</strong> ${esc(label)}</p>`
+    : "";
   const lines = state.data.csLines;
   if (!lines) {
-    renderDwellingResult(
-      `<p class="flag-note">Le service de classement sonore n’a pas pu être chargé. Réessayez dans quelques instants, ou consultez directement l’arrêté préfectoral n°17-146.</p>`,
+    openDetail(
+      `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h2>Service indisponible</h2>${addressLine}<p class="flag-note">Le service de classement sonore n’a pas pu être chargé. Réessayez dans quelques instants, ou consultez directement l’arrêté préfectoral n°17-146.</p>`,
     );
     return;
   }
@@ -365,14 +365,14 @@ function checkDwelling(lon, lat, label) {
       });
   }
   if (!matches.length) {
-    renderDwellingResult(
-      `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h3>Hors secteur classé</h3><p>Aucun tronçon classé ne place ce point dans un secteur affecté par le bruit routier, d’après l’arrêté n°17-146.</p><p class="flag-note">Vérification indicative : géométrie officielle simplifiée, sans la demi-largeur de chaussée. Le bruit ferroviaire ou aérien n’est pas couvert ici.</p>`,
+    openDetail(
+      `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h2>Hors secteur classé</h2>${addressLine}<p>Aucun tronçon classé ne place ce point dans un secteur affecté par le bruit routier, d’après l’arrêté n°17-146.</p><p class="flag-note">Vérification indicative : géométrie officielle simplifiée, sans la demi-largeur de chaussée. Le bruit ferroviaire ou aérien n’est pas couvert ici.</p>`,
     );
     return;
   }
   matches.sort((a, b) => a.cat - b.cat);
-  renderDwellingResult(
-    `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h3>Dans un secteur affecté</h3><div class="kpi-grid">${matches
+  openDetail(
+    `<span class="detail-tag">CLASSEMENT SONORE ROUTIER</span><h2>Dans un secteur affecté</h2>${addressLine}<div class="kpi-grid">${matches
       .slice(0, 4)
       .map(
         (m) =>

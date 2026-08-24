@@ -234,30 +234,6 @@
   border-radius: 16px;
   background: #fff;
 }
-.section-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-.section-head h2 {
-  margin: 0;
-  color: var(--navy);
-  font-size: 14px;
-}
-.section-head p {
-  margin: 5px 0 0;
-  color: #475569;
-  font-size: 12px;
-}
-.status-local {
-  height: 23px;
-  padding: 5px 8px;
-  border-radius: 99px;
-  background: #e9f8ef;
-  color: #18753c;
-  font-size: 9px;
-  font-weight: 700;
-}
 .theme-heading {
   display: flex;
   justify-content: space-between;
@@ -386,16 +362,6 @@
 .pick-button.active {
   background: var(--blue);
   color: #fff;
-}
-.dwelling-result:not(:empty) {
-  margin-top: 10px;
-}
-.dwelling-result h3 {
-  margin: 6px 0;
-  font-size: 15px;
-}
-.dwelling-result .kpi-grid {
-  margin-top: 8px;
 }
 .cs-line {
   background: linear-gradient(135deg, #ffe05b, #691635);
