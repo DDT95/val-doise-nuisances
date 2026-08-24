@@ -7,6 +7,7 @@ d'en-tête CORS et ne peuvent donc pas être appelés depuis un navigateur.
 """
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -39,13 +40,27 @@ def fetch(url, timeout=90):
 
 
 def discover_type_name(capabilities_url):
-    root = ET.fromstring(fetch(capabilities_url))
+    raw = fetch(capabilities_url)
+    root = ET.fromstring(raw)
+    type_name = None
     for elem in root.iter():
         if elem.tag.rsplit("}", 1)[-1] == "FeatureType":
             for child in elem:
                 if child.tag.rsplit("}", 1)[-1] == "Name" and child.text:
-                    return child.text.strip()
-    raise RuntimeError("Aucune couche trouvée dans GetCapabilities : " + capabilities_url)
+                    type_name = child.text.strip()
+                    break
+        if type_name:
+            break
+    formats = sorted(set(re.findall(rb'outputFormat"[^>]*>\s*<[^>]*>([^<]+)<', raw, re.I)))
+    print(f"outputFormat déclarés (parsing strict) : {[f.decode() for f in formats]}")
+    for i, m in enumerate(re.finditer(rb"outputFormat", raw, re.I)):
+        if i >= 6:
+            break
+        start = max(0, m.start() - 20)
+        print(f"contexte outputFormat #{i} : {raw[start:m.start()+200]!r}")
+    if not type_name:
+        raise RuntimeError("Aucune couche trouvée dans GetCapabilities : " + capabilities_url)
+    return type_name
 
 
 def first_coord(geometry):
@@ -98,7 +113,7 @@ def fetch_geojson(source, verbose=False):
                     print(f"{version}/{output_format} : réponse JSON sans 'features' -> {raw[:200]!r}")
                 last_error = f"{version}/{output_format} : pas de 'features' dans la réponse"
             except urllib.error.HTTPError as exc:
-                body = exc.read()[:300]
+                body = exc.read()[:1500]
                 print(f"{version}/{output_format} : HTTP {exc.code} -> {body!r}")
                 last_error = f"{version}/{output_format} : HTTP {exc.code}"
             except Exception as exc:  # on tente la combinaison suivante
