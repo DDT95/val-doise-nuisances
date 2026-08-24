@@ -142,6 +142,48 @@ def simplify_geometry(geometry):
     return geometry
 
 
+def merge_touching_lines(lines):
+    """Recolle des tronçons bout à bout partageant un point d'extrémité.
+    Certaines couches (voies ferrées SNCF) fragmentent une ligne continue en
+    dizaines de milliers de segments gml:curveMember de 2 points, ce qui
+    empêche toute simplification et fait exploser la taille du fichier."""
+    if len(lines) < 2:
+        return lines
+    endpoints = {}
+    for i, line in enumerate(lines):
+        if len(line) < 2:
+            continue
+        endpoints.setdefault(tuple(line[0]), []).append((i, "start"))
+        endpoints.setdefault(tuple(line[-1]), []).append((i, "end"))
+    used = [False] * len(lines)
+    result = []
+    for i, line in enumerate(lines):
+        if used[i]:
+            continue
+        used[i] = True
+        chain = list(line)
+        for extend_front in (False, True):
+            extended = True
+            while extended:
+                extended = False
+                key = tuple(chain[0] if extend_front else chain[-1])
+                for j, which in endpoints.get(key, []):
+                    if used[j]:
+                        continue
+                    seg = lines[j]
+                    if extend_front:
+                        piece = seg[:-1] if which == "end" else list(reversed(seg))[:-1]
+                        chain[0:0] = piece
+                    else:
+                        piece = seg[1:] if which == "start" else list(reversed(seg))[1:]
+                        chain.extend(piece)
+                    used[j] = True
+                    extended = True
+                    break
+        result.append(chain)
+    return result
+
+
 def geom_from_gml(elem):
     tag = local(elem.tag)
     if tag == "Point":
@@ -159,6 +201,7 @@ def geom_from_gml(elem):
                 g = geom_from_gml(child)
                 if g:
                     lines.append(g["coordinates"])
+        lines = merge_touching_lines(lines)
         return {"type": "MultiLineString", "coordinates": lines} if lines else None
     if tag in ("Polygon", "Surface"):
         rings = []
