@@ -1,5 +1,15 @@
 const $ = (id) => document.getElementById(id),
-  map = L.map("map", { zoomControl: false }).setView([49.08, 2.1], 10);
+  bounds = [
+    [48.89, 1.6],
+    [49.25, 2.6],
+  ],
+  map = L.map("map", {
+    zoomControl: false,
+    minZoom: 6,
+    maxZoom: 19,
+    zoomSnap: 0.25,
+    zoomDelta: 0.5,
+  }).fitBounds(bounds, { padding: [8, 8] });
 L.control.zoom({ position: "bottomright" }).addTo(map);
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
@@ -14,7 +24,7 @@ map.getPane("network").style.zIndex = 430;
 map.createPane("territoryMask");
 map.getPane("territoryMask").style.zIndex = 440;
 map.getPane("territoryMask").style.pointerEvents = "none";
-const bounds = [
+const rasterBounds = [
     [48.911488, 1.6035671],
     [49.248488, 2.5965671],
   ],
@@ -27,6 +37,14 @@ const bounds = [
 function openDetail(html) {
   $("detailContent").innerHTML = html;
   $("detailPanel").classList.add("open");
+}
+function closeDetail() {
+  $("detailPanel").classList.remove("open");
+  $("detailContent").replaceChildren();
+  if (state.layers.clickMarker) {
+    map.removeLayer(state.layers.clickMarker);
+    delete state.layers.clickMarker;
+  }
 }
 function esc(s) {
   return String(s ?? "").replace(
@@ -101,11 +119,11 @@ function addTerritoryMask(buffer) {
     interactive: false,
   }).addTo(map);
 }
-const roadNoise = L.imageOverlay("data/noise-road.png", bounds, {
+const roadNoise = L.imageOverlay("data/noise-road.png", rasterBounds, {
     pane: "noise",
     opacity: 0.76,
   }),
-  railNoise = L.imageOverlay("data/noise-rail.png", bounds, {
+  railNoise = L.imageOverlay("data/noise-rail.png", rasterBounds, {
     pane: "noise",
     opacity: 0.78,
   });
@@ -197,7 +215,7 @@ Promise.all(
   // uniquement comme source pour la recherche de territoire et les bornes
   // de recentrage (getBounds()).
   state.layers.communes = L.geoJSON(communes);
-  map.fitBounds(state.layers.communes.getBounds(), { padding: [16, 16] });
+  map.fitBounds(state.layers.communes.getBounds(), { padding: [10, 10] });
   setupSearch(communes);
   loadAircraft();
 });
@@ -482,7 +500,7 @@ function showNuisancesAt(lon, lat) {
         }</div>`
       : "";
   openDetail(
-    `<span class="detail-tag">NUISANCES · CE POINT</span><h2>${hasMatch ? "Dans un secteur affecté par le bruit" : "Hors secteur classé"}</h2>${regHtml}${noiseHtml}<p class="flag-note">Vérification indicative à partir des géométries officielles, sans la demi-largeur de chaussée ou de voie. Le bruit aérien n’est pas couvert ici. En cas de doute (isolement acoustique, permis de construire…), consultez le service instructeur de la DDT 95.</p>`,
+    `<span class="detail-tag">NUISANCES · CE POINT</span><h2>${hasMatch ? "Dans un secteur affecté par le bruit" : "Hors secteur classé"}</h2>${regHtml}${noiseHtml}<p class="flag-note"><strong>Pour l’instruction :</strong> retenez la catégorie la plus sévère affichée, vérifiez l’emprise exacte du projet par rapport au secteur affecté, puis appliquez si nécessaire l’isolement acoustique prévu par l’arrêté du 30 mai 1996. Résultat indicatif : la demi-largeur de la chaussée ou de la voie et le bruit aérien ne sont pas intégrés.</p>`,
   );
 }
 function sampleNoise(key, latlng) {
@@ -738,12 +756,12 @@ $("clearAll").onclick = () => {
     button.classList.remove("active");
     toggle(button.dataset.layer, false);
   });
-  $("detailPanel").classList.remove("open");
+  closeDetail();
 };
 $("resetView").onclick = () =>
   state.layers.communes &&
-  map.fitBounds(state.layers.communes.getBounds(), { padding: [16, 16] });
-$("closeDetail").onclick = () => $("detailPanel").classList.remove("open");
+  map.fitBounds(state.layers.communes.getBounds(), { padding: [10, 10] });
+$("closeDetail").onclick = closeDetail;
 $("openData").onclick = $("openDataTop").onclick = openSynthesis;
 $("openMethod").onclick = () => $("methodDialog").showModal();
 document
