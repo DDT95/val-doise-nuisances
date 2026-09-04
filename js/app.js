@@ -513,7 +513,6 @@ async function queryPebAt(lon, lat) {
     REQUEST: "GetFeatureInfo",
     LAYERS: "dgac_peb_plan_wmsv",
     QUERY_LAYERS: "dgac_peb_plan_wmsv",
-    STYLES: "default-style-dgac_peb_plan_wmsv",
     CRS: "EPSG:4326",
     BBOX: `${lat - delta},${lon - delta},${lat + delta},${lon + delta}`,
     WIDTH: "101",
