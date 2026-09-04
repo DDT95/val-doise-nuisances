@@ -17,6 +17,8 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 }).addTo(map);
 map.createPane("noise");
 map.getPane("noise").style.zIndex = 410;
+map.createPane("peb");
+map.getPane("peb").style.zIndex = 415;
 map.createPane("traffic");
 map.getPane("traffic").style.zIndex = 420;
 map.createPane("network");
@@ -31,9 +33,21 @@ const rasterBounds = [
   state = {
     layers: {},
     stats: {},
-    active: new Set(["roadNoise", "roads", "csRoad", "csRail"]),
+    active: new Set(["roadNoise", "roads", "csRoad", "csRail", "peb"]),
     data: {},
   };
+state.layers.peb = L.tileLayer
+  .wms("https://data.geopf.fr/wms-v/ows", {
+    pane: "peb",
+    layers: "dgac_peb_plan_wmsv",
+    styles: "default-style-dgac_peb_plan_wmsv",
+    format: "image/png",
+    transparent: true,
+    version: "1.3.0",
+    opacity: 0.72,
+    attribution: "DGAC · Géoplateforme IGN",
+  })
+  .addTo(map);
 function openDetail(html) {
   $("detailContent").innerHTML = html;
   $("detailPanel").classList.add("open");
@@ -349,7 +363,9 @@ for (const op of RAIL_OPERATORS) {
 }
 state.layers.csRail = L.layerGroup(csRailSub).addTo(map);
 async function fetchGeoJSON(file) {
-  const res = await fetch(`data/${file}?v=${Date.now()}`, { cache: "no-store" });
+  const res = await fetch(`data/${file}?v=${Date.now()}`, {
+    cache: "no-store",
+  });
   if (!res.ok) throw new Error("HTTP " + res.status);
   return res.json();
 }
@@ -373,7 +389,10 @@ async function loadCsRoute() {
   if (roadBuffer.status === "fulfilled" && roadBuffer.value.features.length) {
     state.layers.csRoadBuffer.addData(roadBuffer.value);
   } else if (roadBuffer.status === "rejected") {
-    console.warn("CS Route routier (empreinte) indisponible :", roadBuffer.reason);
+    console.warn(
+      "CS Route routier (empreinte) indisponible :",
+      roadBuffer.reason,
+    );
   }
   $("csRoadStatus").textContent = state.data.csRoadLines
     ? `${state.data.csRoadLines.features.length} tronçons classés · arrêté n°17-146`
@@ -382,25 +401,43 @@ async function loadCsRoute() {
   RAIL_OPERATORS.forEach((op, i) => {
     const linesResult = railResults[i * 2];
     const bufferResult = railResults[i * 2 + 1];
-    if (linesResult.status === "fulfilled" && linesResult.value.features.length) {
-      linesResult.value.features.forEach((f) => (f.properties._operator = op.label));
+    if (
+      linesResult.status === "fulfilled" &&
+      linesResult.value.features.length
+    ) {
+      linesResult.value.features.forEach(
+        (f) => (f.properties._operator = op.label),
+      );
       railFeatures.push(...linesResult.value.features);
       op.linesLayer.addData(linesResult.value);
     } else if (linesResult.status === "rejected") {
-      console.warn(`CS Rail ${op.label} (lignes) indisponible :`, linesResult.reason);
+      console.warn(
+        `CS Rail ${op.label} (lignes) indisponible :`,
+        linesResult.reason,
+      );
     }
-    if (bufferResult.status === "fulfilled" && bufferResult.value.features.length) {
+    if (
+      bufferResult.status === "fulfilled" &&
+      bufferResult.value.features.length
+    ) {
       op.bufferLayer.addData(bufferResult.value);
     } else if (bufferResult.status === "rejected") {
-      console.warn(`CS Rail ${op.label} (empreinte) indisponible :`, bufferResult.reason);
+      console.warn(
+        `CS Rail ${op.label} (empreinte) indisponible :`,
+        bufferResult.reason,
+      );
     }
   });
   if (railFeatures.length) {
-    state.data.csRailLines = { type: "FeatureCollection", features: railFeatures };
+    state.data.csRailLines = {
+      type: "FeatureCollection",
+      features: railFeatures,
+    };
     $("csRailStatus").textContent =
       `${railFeatures.length} tronçons classés (SNCF/RATP/SGP) · arrêté n°16249`;
   } else {
-    $("csRailStatus").textContent = "Synchronisation en cours, réessayez plus tard";
+    $("csRailStatus").textContent =
+      "Synchronisation en cours, réessayez plus tard";
   }
 }
 loadCsRoute();
@@ -465,17 +502,69 @@ function matchTile(m) {
   const width = esc(getProp(m.props, "es", "tampon") ?? "—");
   return `<div class="kpi-tile warn"><small>${operator ? esc(operator) + " · " : ""}${name}</small><strong>Catégorie ${cat}</strong><em>Secteur ${width} m</em></div>`;
 }
-function showNuisancesAt(lon, lat) {
+async function queryPebAt(lon, lat) {
+  if (!state.active.has("peb")) return null;
+  const bounds = map.getBounds();
+  const size = map.getSize();
+  const point = map.latLngToContainerPoint([lat, lon]);
+  const parameters = new URLSearchParams({
+    SERVICE: "WMS",
+    VERSION: "1.3.0",
+    REQUEST: "GetFeatureInfo",
+    LAYERS: "dgac_peb_plan_wmsv",
+    QUERY_LAYERS: "dgac_peb_plan_wmsv",
+    STYLES: "default-style-dgac_peb_plan_wmsv",
+    CRS: "EPSG:4326",
+    BBOX: `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`,
+    WIDTH: String(size.x),
+    HEIGHT: String(size.y),
+    I: String(Math.round(point.x)),
+    J: String(Math.round(point.y)),
+    INFO_FORMAT: "application/json",
+    FEATURE_COUNT: "4",
+  });
+  try {
+    const response = await fetch(
+      `https://data.geopf.fr/wms-v/ows?${parameters}`,
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.features?.[0]?.properties || null;
+  } catch {
+    return null;
+  }
+}
+function pebDetail(properties) {
+  if (!properties)
+    return `<h3>Bruit aérien · PEB</h3><p>Ce point n’est pas situé dans une zone A, B, C ou D du PEB.</p>`;
+  const zone = esc(properties.zone || "—");
+  const airport = esc(properties.nom || properties.code_oaci || "Aérodrome");
+  const min = esc(properties.indldenext || "—");
+  const max = esc(properties.indldenint || "—");
+  const date = properties.date_arret
+    ? new Date(properties.date_arret).toLocaleDateString("fr-FR")
+    : "—";
+  const document = properties.ref_doc
+    ? `<a class="profile-link" href="${esc(properties.ref_doc)}" target="_blank" rel="noopener">Consulter le PEB approuvé ↗</a>`
+    : "";
+  return `<h3>Bruit aérien · PEB</h3><div class="kpi-grid"><div class="kpi-tile warn"><small>Zonage réglementaire</small><strong>Zone ${zone}</strong><em>${airport}</em></div><div class="kpi-tile"><small>Indice du zonage</small><strong>${min}–${max} Lden</strong><em>Arrêté du ${date}</em></div></div>${document}`;
+}
+async function showNuisancesAt(lon, lat) {
   if (state.layers.clickMarker) map.removeLayer(state.layers.clickMarker);
   state.layers.clickMarker = L.marker([lat, lon]).addTo(map);
   const roadReady = !!state.data.csRoadLines,
     railReady = !!state.data.csRailLines;
-  const road = dedupeMatches(regulatoryMatches(lon, lat, state.data.csRoadLines));
-  const rail = dedupeMatches(regulatoryMatches(lon, lat, state.data.csRailLines));
+  const road = dedupeMatches(
+    regulatoryMatches(lon, lat, state.data.csRoadLines),
+  );
+  const rail = dedupeMatches(
+    regulatoryMatches(lon, lat, state.data.csRailLines),
+  );
   const hasMatch = road.length || rail.length;
   const latlng = L.latLng(lat, lon);
   const roadDb = sampleNoise("roadNoise", latlng);
   const railDb = sampleNoise("railNoise", latlng);
+  const pebProperties = await queryPebAt(lon, lat);
 
   let regHtml;
   if (!roadReady && !railReady) {
@@ -500,7 +589,7 @@ function showNuisancesAt(lon, lat) {
         }</div>`
       : "";
   openDetail(
-    `<span class="detail-tag">NUISANCES · CE POINT</span><h2>${hasMatch ? "Dans un secteur affecté par le bruit" : "Hors secteur classé"}</h2>${regHtml}${noiseHtml}<p class="flag-note"><strong>Pour l’instruction :</strong> retenez la catégorie la plus sévère affichée, vérifiez l’emprise exacte du projet par rapport au secteur affecté, puis appliquez si nécessaire l’isolement acoustique prévu par l’arrêté du 30 mai 1996. Résultat indicatif : la demi-largeur de la chaussée ou de la voie et le bruit aérien ne sont pas intégrés.</p>`,
+    `<span class="detail-tag">NUISANCES · CE POINT</span><h2>${hasMatch || pebProperties ? "Dans un secteur affecté par le bruit" : "Hors secteur classé"}</h2>${regHtml}${noiseHtml}${state.active.has("peb") ? pebDetail(pebProperties) : ""}<p class="flag-note"><strong>Pour l’instruction :</strong> vérifiez l’emprise exacte du projet dans les documents opposables. La lecture cartographique est indicative et ne remplace pas le document réglementaire approuvé.</p>`,
   );
 }
 function sampleNoise(key, latlng) {
@@ -706,6 +795,10 @@ function updateLegend() {
   if (state.active.has("railNoise"))
     parts.push(
       '<span><i class="noise-ramp"></i>Bruit ferroviaire · Lden 55–75 dB(A)</span>',
+    );
+  if (state.active.has("peb"))
+    parts.push(
+      '<span class="peb-key"><i class="zone-a"></i><b>A</b><i class="zone-b"></i><b>B</b><i class="zone-c"></i><b>C</b><i class="zone-d"></i><b>D</b></span>',
     );
   if (state.active.has("csRoad"))
     parts.push(

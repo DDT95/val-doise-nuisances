@@ -7,7 +7,9 @@
       name="description"
       content="Cliquez n’importe où sur la carte du Val-d’Oise pour connaître le classement sonore routier et ferroviaire (arrêtés n°17-146 et n°16249) et le bruit stratégique à cet endroit."
     />
-    <title>Classement sonore routier et ferroviaire · Nuisances Val-d’Oise · DDT 95</title>
+    <title>
+      Classement sonore routier et ferroviaire · Nuisances Val-d’Oise · DDT 95
+    </title>
     <link rel="preconnect" href="https://tile.openstreetmap.org" />
     <link
       rel="stylesheet"
@@ -137,6 +139,18 @@
                 </button>
               </div>
             </div>
+            <div class="layer-group">
+              <span>BRUIT AÉRIEN · ZONAGE RÉGLEMENTAIRE</span>
+              <div class="layer-cards">
+                <button class="layer-card active" data-layer="peb">
+                  <i class="layer-swatch peb"></i
+                  ><span
+                    ><b>Plan d’exposition au bruit (PEB)</b
+                    ><small>DGAC · zones réglementaires A à D</small></span
+                  ><i class="layer-switch"></i>
+                </button>
+              </div>
+            </div>
             <div class="live-heading">EN DIRECT</div>
             <div class="layer-group live-group">
               <span>EN DIRECT</span>
@@ -217,34 +231,34 @@
         <h3>Classement sonore routier et ferroviaire</h3>
         <p>
           DDT 95, classement sonore des infrastructures routières (arrêté
-          préfectoral n°17-146) et ferroviaires SNCF, RATP et Société du
-          Grand Paris (arrêté préfectoral n°16249), avec leurs empreintes
-          sonores. Les flux WFS publiés sur data.gouv.fr sont resynchronisés
-          une fois par jour par une action GitHub et publiés en GeoJSON dans
-          ce dépôt — un appel direct depuis le navigateur n’est pas possible,
-          ce service de l’État ne renvoyant pas d’en-tête CORS.
+          préfectoral n°17-146) et ferroviaires SNCF, RATP et Société du Grand
+          Paris (arrêté préfectoral n°16249), avec leurs empreintes sonores. Les
+          flux WFS publiés sur data.gouv.fr sont resynchronisés une fois par
+          jour par une action GitHub et publiés en GeoJSON dans ce dépôt — un
+          appel direct depuis le navigateur n’est pas possible, ce service de
+          l’État ne renvoyant pas d’en-tête CORS.
         </p>
         <p>
-          Les 5 catégories partagent la même largeur de secteur affecté
-          quel que soit le mode (arrêté du 30 mai 1996, art. 3) : catégorie 1
-          = 300 m (la plus sévère), 2 = 250 m, 3 = 100 m, 4 = 30 m, 5 = 10 m.
-          Pour le routier, ces catégories correspondent à des niveaux sonores
-          de référence LAeq publiés dans l’arrêté n°17-146 (catégorie 1 :
-          jour &gt; 81 dB(A), nuit &gt; 76 dB(A) ; catégorie 5 : jour 60 à
-          65 dB(A), nuit 55 à 60 dB(A)). Dans un secteur affecté, toute
-          construction neuve à usage sensible (habitation, enseignement,
-          santé, hôtellerie) doit respecter un isolement acoustique renforcé,
-          calculé selon la méthode forfaitaire de l’arrêté du 30 mai 1996 :
-          plus la catégorie est basse, plus l’isolement exigé est important.
+          Les 5 catégories partagent la même largeur de secteur affecté quel que
+          soit le mode (arrêté du 30 mai 1996, art. 3) : catégorie 1 = 300 m (la
+          plus sévère), 2 = 250 m, 3 = 100 m, 4 = 30 m, 5 = 10 m. Pour le
+          routier, ces catégories correspondent à des niveaux sonores de
+          référence LAeq publiés dans l’arrêté n°17-146 (catégorie 1 : jour &gt;
+          81 dB(A), nuit &gt; 76 dB(A) ; catégorie 5 : jour 60 à 65 dB(A), nuit
+          55 à 60 dB(A)). Dans un secteur affecté, toute construction neuve à
+          usage sensible (habitation, enseignement, santé, hôtellerie) doit
+          respecter un isolement acoustique renforcé, calculé selon la méthode
+          forfaitaire de l’arrêté du 30 mai 1996 : plus la catégorie est basse,
+          plus l’isolement exigé est important.
         </p>
         <p>
           Un clic sur la carte compare le point choisi à la distance
           réglementaire (« es »/« tampon ») de chaque tronçon classé le plus
           proche, route ou rail, sans la demi-largeur de chaussée ou de voie :
-          c’est une lecture indicative, pas un certificat d’exposition. Le
-          bruit aérien n’y figure pas. Si la synchronisation échoue, les
-          couches et le rapport de clic l’indiquent au lieu d’afficher une
-          valeur inventée ou périmée.
+          c’est une lecture indicative, pas un certificat d’exposition. Le bruit
+          aérien n’y figure pas. Si la synchronisation échoue, les couches et le
+          rapport de clic l’indiquent au lieu d’afficher une valeur inventée ou
+          périmée.
         </p>
         <h3>Bruit ferroviaire</h3>
         <p>
@@ -257,6 +271,14 @@
           Positions ADS-B fournies par ADSB.lol et renouvelées chaque minute.
           Altitude, vitesse et type sont affichés lorsqu’ils sont transmis. Le
           signal de proximité n’est pas un niveau acoustique.
+        </p>
+        <h3>Plan d’exposition au bruit (PEB)</h3>
+        <p>
+          DGAC et Géoplateforme de l’IGN, zonages réglementaires en vigueur des
+          aérodromes. Le PEB maîtrise l’urbanisation autour des aérodromes :
+          zone A très forte, B forte, C modérée et D faible. Un clic dans le
+          zonage affiche l’aérodrome, les indices Lden, la date d’approbation et
+          le document réglementaire lorsqu’ils sont fournis.
         </p>
         <h3>Trafic routier direct</h3>
         <p>
