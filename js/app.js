@@ -44,7 +44,7 @@ state.layers.peb = L.tileLayer
     format: "image/png",
     transparent: true,
     version: "1.3.0",
-    opacity: 0.72,
+    opacity: 0.4,
     attribution: "DGAC · Géoplateforme IGN",
   })
   .addTo(map);
@@ -504,9 +504,7 @@ function matchTile(m) {
 }
 async function queryPebAt(lon, lat) {
   if (!state.active.has("peb")) return null;
-  const bounds = map.getBounds();
-  const size = map.getSize();
-  const point = map.latLngToContainerPoint([lat, lon]);
+  const delta = 0.00025;
   const parameters = new URLSearchParams({
     SERVICE: "WMS",
     VERSION: "1.3.0",
@@ -515,11 +513,11 @@ async function queryPebAt(lon, lat) {
     QUERY_LAYERS: "dgac_peb_plan_wmsv",
     STYLES: "default-style-dgac_peb_plan_wmsv",
     CRS: "EPSG:4326",
-    BBOX: `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`,
-    WIDTH: String(size.x),
-    HEIGHT: String(size.y),
-    I: String(Math.round(point.x)),
-    J: String(Math.round(point.y)),
+    BBOX: `${lat - delta},${lon - delta},${lat + delta},${lon + delta}`,
+    WIDTH: "101",
+    HEIGHT: "101",
+    I: "50",
+    J: "50",
     INFO_FORMAT: "application/json",
     FEATURE_COUNT: "4",
   });
