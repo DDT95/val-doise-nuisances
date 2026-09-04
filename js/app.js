@@ -504,7 +504,9 @@ function matchTile(m) {
 }
 async function queryPebAt(lon, lat) {
   if (!state.active.has("peb")) return null;
-  const delta = 0.00025;
+  // La couche DGAC est rasterisée : une emprise trop fine peut ne produire
+  // aucun pixel interrogeable et créer un faux « hors PEB ».
+  const delta = 0.005;
   const parameters = new URLSearchParams({
     SERVICE: "WMS",
     VERSION: "1.3.0",
