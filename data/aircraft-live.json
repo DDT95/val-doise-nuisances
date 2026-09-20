@@ -1,10 +1,8 @@
 {"ac":[
-{"hex":"503c60","type":"adsb_icao","flight":"JAF61K  ","alt_baro":34000,"alt_geom":35675,"gs":479.0,"ias":274,"tas":462,"mach":0.792,"wd":273,"ws":27,"oat":-49,"tat":-21,"track":43.05,"track_rate":0.00,"roll":-0.35,"mag_heading":38.50,"true_heading":40.45,"baro_rate":0,"geom_rate":0,"squawk":"1000","category":"A3","nav_qnh":1012.8,"nav_altitude_mcp":34016,"lat":49.615794,"lon":2.089704,"nic":7,"rc":371,"seen_pos":0.017,"version":2,"nic_baro":1,"nac_p":8,"nac_v":1,"sil":3,"sil_type":"perhour","gva":1,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":185912,"seen":0.0,"rssi":-15.2,"dst":32.208,"dir":359.3},
-{"hex":"4cae98","type":"adsb_icao","flight":"RYR9MJ  ","r":"EI-IKP","t":"B38M","alt_baro":38000,"alt_geom":39700,"gs":421.2,"ias":253,"tas":456,"mach":0.800,"wd":301,"ws":43,"oat":-59,"tat":-32,"track":339.28,"track_rate":0.00,"roll":0.00,"mag_heading":333.81,"true_heading":335.92,"baro_rate":64,"geom_rate":32,"squawk":"5520","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":38016,"nav_altitude_fms":38000,"nav_heading":333.98,"lat":49.362946,"lon":2.626085,"nic":8,"rc":186,"seen_pos":0.355,"version":2,"nic_baro":1,"nac_p":11,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":96878,"seen":0.1,"rssi":-20.7,"dst":26.701,"dir":50.3}
 ]
 ,"msg": "No error"
-,"now": 1789858341001
-,"total": 2
-,"ctime": 1789858341001
+,"now": 1789864061500
+,"total": 0
+,"ctime": 1789864061500
 ,"ptime": 0
 }
