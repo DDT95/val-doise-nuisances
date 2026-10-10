@@ -1,11 +1,8 @@
 {"ac":[
-{"hex":"440073","type":"adsb_icao","flight":"EJU43GW ","r":"OE-LSU","t":"A20N","alt_baro":38950,"alt_geom":39650,"gs":471.1,"ias":236,"tas":444,"mach":0.764,"wd":266,"ws":50,"oat":-51,"tat":-25,"track":140.60,"track_rate":0.00,"roll":0.18,"mag_heading":143.79,"true_heading":145.87,"baro_rate":0,"geom_rate":0,"squawk":"5213","emergency":"none","category":"A3","nav_qnh":1012.8,"nav_altitude_mcp":39008,"lat":48.816120,"lon":2.423353,"nic":8,"rc":186,"seen_pos":0.054,"version":2,"nic_baro":1,"nac_p":10,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":3,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":42451,"seen":0.1,"rssi":-16.5,"dst":20.333,"dir":141.1},
-{"hex":"4866df","type":"adsb_icao","flight":"TRA26V  ","r":"PH-YHX","t":"A21N","alt_baro":36000,"alt_geom":36625,"gs":497.7,"ias":263,"tas":462,"mach":0.792,"wd":255,"ws":60,"oat":-49,"tat":-21,"track":24.20,"track_rate":0.03,"roll":0.00,"mag_heading":16.17,"true_heading":18.25,"baro_rate":64,"geom_rate":64,"squawk":"1000","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_heading":0.00,"lat":49.625337,"lon":2.491076,"nic":8,"rc":186,"seen_pos":0.000,"version":2,"nic_baro":1,"nac_p":10,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":248511,"seen":0.0,"rssi":-13.6,"dst":36.088,"dir":24.9},
-{"hex":"440d4d","type":"adsb_icao","flight":"FDX4774 ","r":"OE-IXK","t":"B738","alt_baro":650,"alt_geom":850,"gs":143.4,"track":265.60,"baro_rate":-832,"squawk":"0230","category":"A3","lat":48.996230,"lon":2.627901,"nic":8,"rc":186,"seen_pos":31.769,"version":2,"nic_baro":1,"nac_p":11,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":159661,"seen":25.3,"rssi":-19.9,"dst":21.334,"dir":103.4}
 ]
 ,"msg": "No error"
-,"now": 1791587021002
-,"total": 3
-,"ctime": 1791587021002
+,"now": 1791598553000
+,"total": 0
+,"ctime": 1791598553000
 ,"ptime": 0
 }
